@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/banner.png" alt="DualSense Mobile Studio" width="100%" />
+<img src="assets/hero-animated.gif" alt="DualSense Mobile Studio Live Engine" width="100%" />
 
 <br/><br/>
 
@@ -159,7 +159,7 @@ go build -ldflags="-s -w" -o DualSenseServer.exe ./server
 
 ## 📡 Network & Binary Protocol
 
-<img src="assets/architecture.png" alt="DualSense Zero-Latency Architecture Diagram" width="100%" />
+<img src="assets/pipeline-animated.gif" alt="DualSense Zero-Latency Animated Pipeline" width="100%" />
 
 <br/><br/>
 
