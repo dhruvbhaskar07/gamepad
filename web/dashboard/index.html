@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DualSense Studio - Desktop Controller Server</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+<!-- Top Header Navigation -->
+  <header>
+    <div class="brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24"><path d="M17.5 7.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zm-11 0a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM8 14H6v2h2v-2zm10 0h-2v2h2v-2zm-5-3h-2v2h2v-2zm-5 5H6v2h2v-2zm10 0h-2v2h2v-2zm-7 2h-2v2h2v-2zM21 9h-2V6c0-.55-.45-1-1-1h-3.18C14.4 3.84 13.3 3 12 3s-2.4.84-2.82 2H6c-.55 0-1 .45-1 1v3H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2v-8c0-1.1-.9-2-2-2zm0 10H3v-8h18v8z"/></svg>
+      </div>
+      <div class="brand-text">
+        <h1>DUALSENSE STUDIO</h1>
+        <p>Windows Virtual Gamepad Server</p>
+      </div>
+    </div>
+
+    <div class="nav-status">
+      <div class="status-badge" id="vigemStatusBadge">
+        <div class="dot green" id="vigemDot"></div>
+        <span id="vigemText">ViGEm Kernel: Ready</span>
+      </div>
+
+      <div class="status-badge" id="ipBadge">
+        <div class="dot green"></div>
+        <span id="ipText">127.0.0.1:8080</span>
+      </div>
+
+      <button class="btn" id="btnJoyCpl" title="Open Windows Game Controllers Dialog">
+        🎮 joy.cpl
+      </button>
+
+      <button class="btn btn-primary" id="btnOpenMobile" title="Open Mobile Controller in Browser">
+        📱 Open Web Pad
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content Body -->
+  <main>
+
+    <!-- LEFT COLUMN: Quick-Connect & Hotspot Automation Hub -->
+    <div class="connect-hub">
+
+      <!-- Smart Auto-Connect Hub Card -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12c0 2.85 1.2 5.42 3.12 7.24.41.39 1.05.38 1.45-.02.38-.38.38-1 .01-1.39C5.03 16.31 4 14.28 4 12c0-4.41 3.59-8 8-8s8 3.59 8 8c0 2.28-1.03 4.31-2.58 5.83-.37.39-.37 1.01.01 1.39.4.4 1.04.41 1.45.02C20.8 17.42 22 14.85 22 12c0-5.52-4.48-10-10-10zm0 4c-3.31 0-6 2.69-6 6 0 1.77.78 3.37 2.02 4.47.4.36 1.03.34 1.41-.04.37-.38.36-.99-.02-1.37C8.55 14.3 8 13.21 8 12c0-2.21 1.79-4 4-4s4 1.79 4 4c0 1.21-.55 2.3-1.41 3.06-.38.38-.39.99-.02 1.37.38.38 1.01.4 1.41.04C17.22 15.37 18 13.77 18 12c0-3.31-2.69-6-6-6zm0 4c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+            Auto-Connect & QR Hub
+          </div>
+          <span class="offline-badge">100% Offline Capable</span>
+        </div>
+
+        <!-- 1. START HERO (Shown when Hotspot is OFF) -->
+        <div id="startHeroSection" class="start-hero">
+          <div class="radar-pulse-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12c0 2.85 1.2 5.42 3.12 7.24.41.39 1.05.38 1.45-.02.38-.38.38-1 .01-1.39C5.03 16.31 4 14.28 4 12c0-4.41 3.59-8 8-8s8 3.59 8 8c0 2.28-1.03 4.31-2.58 5.83-.37.39-.37 1.01.01 1.39.4.4 1.04.41 1.45.02C20.8 17.42 22 14.85 22 12c0-5.52-4.48-10-10-10zm0 4c-3.31 0-6 2.69-6 6 0 1.77.78 3.37 2.02 4.47.4.36 1.03.34 1.41-.04.37-.38.36-.99-.02-1.37C8.55 14.3 8 13.21 8 12c0-2.21 1.79-4 4-4s4 1.79 4 4c0 1.21-.55 2.3-1.41 3.06-.38.38-.39.99-.02 1.37.38.38 1.01.4 1.41.04C17.22 15.37 18 13.77 18 12c0-3.31-2.69-6-6-6zm0 4c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+          </div>
+          <h2 class="start-hero-title">READY TO PLAY</h2>
+          <p class="start-hero-sub">Click Start to turn on your laptop's hotspot automatically and generate the instant pairing QR code.</p>
+          <button class="btn btn-hero-start" id="btnBigStart">
+            <span>⚡</span>
+            <span>START AUTO-CONNECT</span>
+          </button>
+          <a href="#" id="linkDirectWifi" style="color: var(--cyan); font-size: 12px; text-decoration: none; margin-top: 4px;">
+            Or show direct Wi-Fi pairing QR &rarr;
+          </a>
+        </div>
+
+        <!-- 2. ACTIVE PAIRING SECTION (Shown when Hotspot is ON or Start clicked) -->
+        <div id="activePairingSection" style="display: none;">
+          <!-- Tabs for Wi-Fi Join QR vs Gamepad Link QR -->
+          <div class="qr-mode-tabs">
+            <button class="qr-tab active" id="tabWifiQR">📶 1-Tap Wi-Fi Join</button>
+            <button class="qr-tab" id="tabGamepadQR">🌐 Gamepad Link</button>
+          </div>
+
+          <!-- Dynamic QR Container -->
+          <div class="qr-container">
+            <div id="qrCanvas" style="width: 216px; height: 216px; display: flex; align-items: center; justify-content: center;"></div>
+          </div>
+
+          <!-- Helper Instructions for current mode -->
+          <div class="qr-instruction-banner" id="qrModeInfo">
+            📷 Point phone camera at QR &rarr; Tap <b>"Join Network"</b>. Phone connects to laptop hotspot automatically!
+          </div>
+
+          <!-- Hotspot / Network Credentials Info Box -->
+          <div class="credentials-box">
+            <div class="cred-row">
+              <span class="cred-label">📶 HOTSPOT SSID:</span>
+              <span class="cred-val" id="dispSsid">dpc</span>
+            </div>
+            <div class="cred-row">
+              <span class="cred-label">🔑 PASSWORD:</span>
+              <span class="cred-val" id="dispPass">12345678</span>
+            </div>
+            <div class="cred-row">
+              <span class="cred-label">🌐 GAMEPAD URL:</span>
+              <span class="cred-val" id="dispUrl">http://192.168.137.1:8080</span>
+            </div>
+          </div>
+
+          <!-- Quick Manual / Fallback Guide -->
+          <div style="background: rgba(255, 255, 255, 0.04); border: 1px dashed rgba(255, 255, 255, 0.15); border-radius: 10px; padding: 10px 12px; font-size: 11px; color: var(--text-muted); line-height: 1.5; margin-bottom: 14px;">
+            💡 <b>Agar Camera Scan na kare:</b><br>
+            1. Phone Settings &rarr; Wi-Fi &rarr; Connect to <b>"dpc"</b> (Password: <b>12345678</b>)<br>
+            2. Phone ke Chrome ya Safari me open karein: <b style="color: var(--cyan);">http://192.168.137.1:8080</b>
+          </div>
+
+          <!-- Phone Connected Alert Toast -->
+          <div id="phoneConnectedToast" class="connected-toast" style="display: none;">
+            🎉 Phone Connected! Gamepad Ready to Play!
+          </div>
+
+          <!-- Hotspot Footer Actions -->
+          <div class="hotspot-footer-actions">
+            <button class="btn" id="btnStopHotspot">⏹️ Stop Hotspot</button>
+            <button class="btn btn-primary" id="btnCopyGamepadUrl">📋 Copy URL</button>
+          </div>
+          <div style="margin-top: 10px; display: flex; justify-content: center;">
+            <button class="btn" id="btnHotspotSettings" style="font-size: 11px; padding: 5px 12px;">
+              ⚙️ Windows Hotspot Settings
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN: Dashboard & Live Visualizer -->
+    <div class="dashboard-view">
+
+      <!-- Player Slots Grid -->
+      <div class="slots-grid">
+
+        <!-- Player 1 Slot -->
+        <div class="card slot-card" id="p1Card">
+          <div class="card-header">
+            <div class="card-title">
+              <span class="slot-badge p1">P1</span>
+              Player 1 (Master)
+            </div>
+            <span class="status-badge" id="p1StatusBadge">
+              <div class="dot" id="p1Dot"></div>
+              <span id="p1StatusText">Waiting for Phone</span>
+            </span>
+          </div>
+
+          <div class="slot-info-grid">
+            <div class="stat-box">
+              <div class="stat-label">Device Type</div>
+              <div class="stat-val" id="p1Device">None</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">Latency / Ping</div>
+              <div class="stat-val" id="p1Latency" style="color: var(--cyan);">-- ms</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">Virtual Output</div>
+              <div class="stat-val" style="color: var(--green);">Xbox 360 #1</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">Client IP</div>
+              <div class="stat-val" id="p1IP">--</div>
+            </div>
+          </div>
+
+          <!-- Real-Time Game Force Feedback Rumble Meters -->
+          <div class="rumble-bars">
+            <div class="motor-row">
+              <span>HEAVY MOTOR</span>
+              <div class="bar-track">
+                <div class="bar-fill heavy" id="p1HeavyBar"></div>
+              </div>
+              <span id="p1HeavyVal" style="width: 38px; text-align: right;">0%</span>
+            </div>
+            <div class="motor-row">
+              <span>LIGHT MOTOR</span>
+              <div class="bar-track">
+                <div class="bar-fill light" id="p1LightBar"></div>
+              </div>
+              <span id="p1LightVal" style="width: 38px; text-align: right;">0%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Player 2 Slot -->
+        <div class="card slot-card" id="p2Card">
+          <div class="card-header">
+            <div class="card-title">
+              <span class="slot-badge p2">P2</span>
+              Player 2 (Co-op)
+            </div>
+            <span class="status-badge" id="p2StatusBadge">
+              <div class="dot" id="p2Dot"></div>
+              <span id="p2StatusText">Waiting for Phone</span>
+            </span>
+          </div>
+
+          <div class="slot-info-grid">
+            <div class="stat-box">
+              <div class="stat-label">Device Type</div>
+              <div class="stat-val" id="p2Device">None</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">Latency / Ping</div>
+              <div class="stat-val" id="p2Latency" style="color: var(--pink);">-- ms</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">Virtual Output</div>
+              <div class="stat-val" style="color: var(--green);">Xbox 360 #2</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">Client IP</div>
+              <div class="stat-val" id="p2IP">--</div>
+            </div>
+          </div>
+
+          <div class="rumble-bars">
+            <div class="motor-row">
+              <span>HEAVY MOTOR</span>
+              <div class="bar-track">
+                <div class="bar-fill heavy" id="p2HeavyBar"></div>
+              </div>
+              <span id="p2HeavyVal" style="width: 38px; text-align: right;">0%</span>
+            </div>
+            <div class="motor-row">
+              <span>LIGHT MOTOR</span>
+              <div class="bar-track">
+                <div class="bar-fill light" id="p2LightBar"></div>
+              </div>
+              <span id="p2LightVal" style="width: 38px; text-align: right;">0%</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Real-Time Interactive Gamepad Visualizer -->
+      <div class="card gamepad-visualizer-card">
+        <div class="card-header">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4-3c-.83 0-1.5-.67-1.5-1.5S18.67 9 19.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+            Live Controller Input Visualizer (Player 1)
+          </div>
+          <span style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);">
+            Real-time Direct XInput Feed
+          </span>
+        </div>
+
+        <div class="visualizer-container">
+          <div class="gamepad-svg-wrapper">
+            <svg class="gamepad-svg" viewBox="0 0 500 230">
+              <!-- Gamepad Body Outline -->
+              <path d="M120,40 Q250,30 380,40 Q460,50 480,130 Q495,190 440,215 Q390,230 350,180 Q250,195 150,180 Q110,230 60,215 Q5,190 20,130 Q40,50 120,40 Z" fill="#0d111a" stroke="#1f293d" stroke-width="3"/>
+              
+              <!-- Triggers & Bumpers -->
+              <rect id="vBtnL1" class="pad-btn" x="80" y="15" width="70" height="20" rx="6"/>
+              <text x="115" y="29" fill="#718096" font-size="10" font-weight="700" text-anchor="middle" font-family="Outfit">L1</text>
+
+              <rect id="vBtnR1" class="pad-btn" x="350" y="15" width="70" height="20" rx="6"/>
+              <text x="385" y="29" fill="#718096" font-size="10" font-weight="700" text-anchor="middle" font-family="Outfit">R1</text>
+
+              <rect id="vBtnL2" class="pad-trigger" x="65" y="0" width="55" height="12" rx="4"/>
+              <rect id="vBtnR2" class="pad-trigger" x="380" y="0" width="55" height="12" rx="4"/>
+
+              <!-- D-PAD Cross -->
+              <g transform="translate(100, 100)">
+                <rect class="pad-stick-base" x="-32" y="-32" width="64" height="64" rx="12"/>
+                <path id="vBtnUp" class="pad-btn" d="M-9,-26 h18 v16 h-18 z"/>
+                <path id="vBtnDown" class="pad-btn" d="M-9,10 h18 v16 h-18 z"/>
+                <path id="vBtnLeft" class="pad-btn" d="M-26,-9 h16 v18 h-16 z"/>
+                <path id="vBtnRight" class="pad-btn" d="M10,-9 h16 v18 h-16 z"/>
+              </g>
+
+              <!-- Left Analog Stick -->
+              <g id="vStickLGroup" transform="translate(175, 145)">
+                <circle class="pad-stick-base" r="30"/>
+                <circle id="vStickLHead" class="pad-stick-head" r="20"/>
+                <circle r="6" fill="#1a202c"/>
+              </g>
+
+              <!-- Center Touchpad / Logo -->
+              <rect x="200" y="55" width="100" height="50" rx="8" fill="#141a26" stroke="#232d42" stroke-width="2"/>
+              <circle id="vBtnPS" class="pad-btn" cx="250" cy="130" r="14"/>
+              <text x="250" y="134" fill="#fff" font-size="10" font-weight="900" text-anchor="middle" font-family="Outfit">PS</text>
+
+              <circle id="vBtnShare" class="pad-btn" cx="180" cy="70" r="7"/>
+              <circle id="vBtnOptions" class="pad-btn" cx="320" cy="70" r="7"/>
+
+              <!-- Right Analog Stick -->
+              <g id="vStickRGroup" transform="translate(325, 145)">
+                <circle class="pad-stick-base" r="30"/>
+                <circle id="vStickRHead" class="pad-stick-head" r="20"/>
+                <circle r="6" fill="#1a202c"/>
+              </g>
+
+              <!-- Action Buttons (Cross, Circle, Square, Triangle) -->
+              <g transform="translate(400, 100)">
+                <!-- Triangle (North) -->
+                <circle id="vBtnTriangle" class="pad-btn" cx="0" cy="-22" r="11"/>
+                <text x="0" y="-18" fill="#00e676" font-size="11" font-weight="800" text-anchor="middle">▲</text>
+
+                <!-- Circle (East) -->
+                <circle id="vBtnCircle" class="pad-btn pad-btn-pink" cx="22" cy="0" r="11"/>
+                <text x="22" y="4" fill="#ff007f" font-size="11" font-weight="800" text-anchor="middle">●</text>
+
+                <!-- Cross (South) -->
+                <circle id="vBtnCross" class="pad-btn" cx="0" cy="22" r="11"/>
+                <text x="0" y="26" fill="#00f0ff" font-size="12" font-weight="900" text-anchor="middle">✕</text>
+
+                <!-- Square (West) -->
+                <circle id="vBtnSquare" class="pad-btn pad-btn-pink" cx="-22" cy="0" r="11"/>
+                <text x="-22" y="4" fill="#e040fb" font-size="11" font-weight="800" text-anchor="middle">■</text>
+              </g>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Desktop Settings Panel -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+            System & Performance Settings
+          </div>
+          <button class="btn" id="btnSaveSettings">Save Preferences</button>
+        </div>
+
+        <div class="settings-grid">
+          <div class="setting-item">
+            <div class="setting-header">
+              <span class="setting-title">Run with Windows</span>
+              <label class="switch">
+                <input type="checkbox" id="chkAutoStart">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <span class="setting-desc">Automatically launch in system tray when PC turns on.</span>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-header">
+              <span class="setting-title">Auto Hotspot</span>
+              <label class="switch">
+                <input type="checkbox" id="chkAutoHotspot">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <span class="setting-desc">Automatically enable Windows Mobile Hotspot at startup.</span>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-header">
+              <span class="setting-title">Minimize to Tray</span>
+              <label class="switch">
+                <input type="checkbox" id="chkMinimizeTray" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+            <span class="setting-desc">Keep running silently in tray when window is closed.</span>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-header">
+              <span class="setting-title">Vibration Feedback</span>
+              <label class="switch">
+                <input type="checkbox" id="chkVibration" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+            <span class="setting-desc">Relay live PC game rumble directly to phone motor & audio.</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Bottom System Footer -->
+  <footer>
+    <div>DualSense Mobile Server &bull; Native High-Performance Virtual Controller</div>
+    <div style="font-family: var(--font-mono); font-size: 11px;">WebSocket RFC6455 &bull; 0ms Input Lag</div>
+  </footer>
+
+  <!-- Self-Contained Zero-Dependency QR Code Generator Engine -->
+  
+
+  <!-- Dashboard Client Logic & Real-Time Sync -->
+
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

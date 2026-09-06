@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="DualSense">
+    <meta name="theme-color" content="#06080e">
+    <title>DualSense Mobile • Modular Controller</title>
+    
+    <!-- Modular Categorized Stylesheets -->
+    <link rel="stylesheet" href="css/theme.css">
+    <link rel="stylesheet" href="css/controller.css">
+    <link rel="stylesheet" href="css/aurora.css">
+    <link rel="stylesheet" href="css/modals.css">
+</head>
+<body class="theme-ps">
+    <!-- Ambient glowing backgrounds -->
+    <div id="ambientLeft" class="ambient-glow ambient-left"></div>
+    <div id="ambientRight" class="ambient-glow ambient-right"></div>
+
+    <!-- Multi-Layer Dynamic Background Graphics Engine -->
+    <div id="bgGraphicsLayer" class="bg-graphics-layer fx-aurora">
+        <div class="aurora-container">
+            <div class="aurora-orb orb-cyan"></div>
+            <div class="aurora-orb orb-magenta"></div>
+            <div class="aurora-orb orb-purple"></div>
+            <div class="aurora-orb orb-emerald"></div>
+            <div class="aurora-orb orb-amber"></div>
+        </div>
+        <div class="cyber-grid-container">
+            <div class="cyber-grid-plane"></div>
+            <div class="cyber-grid-horizon"></div>
+        </div>
+        <div class="floating-glyphs-layer">
+            <div class="floating-glyph" style="top: 15%; left: 8%; color: #00d4ff;">▲</div>
+            <div class="floating-glyph" style="top: 25%; right: 10%; color: #ff0055;">●</div>
+            <div class="floating-glyph" style="bottom: 22%; left: 12%; color: #ff2a6d;">■</div>
+            <div class="floating-glyph" style="bottom: 18%; right: 14%; color: #00ff66;">✖</div>
+            <div class="floating-glyph" style="top: 45%; left: 3%; color: #ffb703; font-size: 18px;">⚡</div>
+            <div class="floating-glyph" style="top: 40%; right: 4%; color: #8b5cf6; font-size: 18px;">✦</div>
+        </div>
+        <div id="rumbleShockwave" class="rumble-shockwave"></div>
+    </div>
+
+    <!-- Sleek Gamer HUD Toast Notification -->
+    <div id="profileToast" class="profile-toast">🎮 Profile Loaded!</div>
+
+    <!-- Top Navigation Bar -->
+    <div class="top-bar">
+        <div class="brand-group">
+            <button id="btnPlayerSlot" class="badge-slot" type="button">🎮 P1</button>
+            <div id="profileBadge" class="profile-pill profile-ps5">PS5 DUALSENSE</div>
+            <div class="status-pill">
+                <div id="statusDot" class="status-dot"></div>
+                <span id="statusText">Connecting...</span>
+            </div>
+            <div id="hudRumblePill" class="status-pill" style="display: none; border-color: #ffb703; color: #ffb703; animation: pulseGlow 0.3s infinite alternate;">
+                <span style="font-size: 10px;">⚡</span>
+                <span style="font-size: 9px; font-weight: 800;">RUMBLE</span>
+            </div>
+        </div>
+
+        <div class="action-nav-group">
+            <button id="btnQuickMode" class="btn-nav">🔄 <span id="lblQuickMode">XBOX</span></button>
+            <button id="btnGyroToggle" class="btn-nav">🎯 POV</button>
+            <button id="btnSettings" class="btn-nav">⚙️</button>
+            <button id="btnFullscreen" class="btn-nav">⛶</button>
+        </div>
+    </div>
+
+    <!-- Edit Mode Toolbar -->
+    <div id="editToolbar" class="edit-toolbar">
+        <span id="lblToolbarProfile" style="font-size: 10px; padding: 2px 7px; background: rgba(0, 212, 255, 0.15); border: 1px solid var(--accent-cyan); color: var(--accent-cyan); border-radius: 12px; font-weight: 800; white-space: nowrap;">PROFILE: DEFAULT</span>
+        <span id="lblSelectedElem" style="font-size: 11px; color: var(--accent-emerald); font-weight: 800;">🖐️ Tap button/stick to resize</span>
+        <div style="display: flex; align-items: center; gap: 4px; background: rgba(0,0,0,0.45); padding: 2px 6px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.12);">
+            <button id="btnElemScaleDown" class="btn-nav" style="padding: 2px 8px; font-size: 11px; font-weight: 900;">➖</button>
+            <span id="lblElemScale" style="font-size: 11px; font-weight: 800; min-width: 38px; text-align: center; color: var(--accent-cyan);">100%</span>
+            <button id="btnElemScaleUp" class="btn-nav" style="padding: 2px 8px; font-size: 11px; font-weight: 900;">➕</button>
+        </div>
+        <button id="btnSaveLayout" class="btn-nav" style="background: var(--accent-emerald); color: #000; font-weight: 800;">💾 Save</button>
+        <button id="btnResetLayout" class="btn-nav">🔄 Reset</button>
+        <button id="btnDoneEdit" class="btn-nav" style="border-color: #ef4444; color: #ef4444;">❌ Done</button>
+    </div>
+
+    <!-- Main Controller Root -->
+    <div id="controllerRoot" class="controller-root">
+        <!-- Shoulder Buttons -->
+        <div id="leftShoulders" class="shoulder-group-left draggable" data-elem-id="leftShoulders">
+            <div id="btnL2" class="btn-shoulder" data-code="L2">
+                <span>L2</span>
+                <div id="fillL2" class="trigger-fill"></div>
+            </div>
+            <div id="btnL1" class="btn-shoulder" data-code="L1">L1</div>
+        </div>
+
+        <div id="rightShoulders" class="shoulder-group-right draggable" data-elem-id="rightShoulders">
+            <div id="btnR1" class="btn-shoulder" data-code="R1">R1</div>
+            <div id="btnR2" class="btn-shoulder" data-code="R2">
+                <span>R2</span>
+                <div id="fillR2" class="trigger-fill"></div>
+            </div>
+        </div>
+
+        <!-- D-Pad -->
+        <div id="dpadContainer" class="dpad-container pos-ps5-dpad draggable" data-elem-id="dpadContainer">
+            <div class="dpad-btn dpad-up" data-code="UP">▲</div>
+            <div class="dpad-btn dpad-down" data-code="DOWN">▼</div>
+            <div class="dpad-btn dpad-left" data-code="LEFT">◀</div>
+            <div class="dpad-btn dpad-right" data-code="RIGHT">▶</div>
+        </div>
+
+        <!-- Action Face Buttons -->
+        <div id="actionContainer" class="action-container draggable" data-elem-id="actionContainer">
+            <div id="btnTop" class="action-btn btn-top" data-code="Y">▲</div>
+            <div id="btnRight" class="action-btn btn-right" data-code="B">●</div>
+            <div id="btnBottom" class="action-btn btn-bottom" data-code="A">✖</div>
+            <div id="btnLeft" class="action-btn btn-left" data-code="X">■</div>
+        </div>
+
+        <!-- Analog Joysticks -->
+        <div id="leftStickContainer" class="stick-container pos-ps5-stick-left draggable" data-elem-id="leftStickContainer">
+            <div id="btnL3Click" class="btn-stick-click">L3</div>
+            <div id="leftThumb" class="stick-thumb">L</div>
+        </div>
+
+        <div id="rightStickContainer" class="stick-container pos-ps5-stick-right draggable" data-elem-id="rightStickContainer">
+            <div id="btnR3Click" class="btn-stick-click">R3</div>
+            <div id="rightThumb" class="stick-thumb">R</div>
+        </div>
+
+        <!-- Center Section (Touchpad, Home, Options, Share) -->
+        <div id="centerSection" class="center-section draggable" data-elem-id="centerSection">
+            <div id="touchpad" class="touchpad">
+                <span>TOUCHPAD / POV SWIPE</span>
+                <span class="touchpad-hint">Drag to Look • Click for Map</span>
+            </div>
+            <div class="center-btn-row">
+                <div id="btnShare" class="btn-micro" data-code="BACK">SHARE</div>
+                <div id="btnHome" class="btn-home-logo" data-code="GUIDE">PS</div>
+                <div id="btnOptions" class="btn-micro" data-code="START">OPTIONS</div>
+            </div>
+        </div>
+
+        <!-- Pro Paddles -->
+        <div id="paddleM1" class="paddle-m1 draggable" data-elem-id="paddleM1">M1 (L3)</div>
+        <div id="paddleM2" class="paddle-m2 draggable" data-elem-id="paddleM2">M2 (R3)</div>
+
+        <!-- POV Crosshair HUD -->
+        <div id="povCrosshair" class="pov-crosshair-hud">
+            <div id="povDot" class="pov-dot"></div>
+            <div class="pov-label">GYRO AIM ACTIVE</div>
+        </div>
+    </div>
+
+    <!-- Modular Controller JavaScript Engine -->
+    <script src="js/constants.js"></script>
+    <script src="js/haptics.js"></script>
+    <script src="js/network.js"></script>
+    <script src="js/profiles.js"></script>
+    <script src="js/fullscreen.js"></script>
+</body>
+</html>

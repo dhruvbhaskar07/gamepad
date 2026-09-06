@@ -1,0 +1,4371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="DualSense">
+    <meta name="theme-color" content="#06080e">
+    <title>DualSense Mobile • Pro Universal Controller</title>
+    <style>
+        :root {
+            --bg-deep: #06080e;
+            --surface-card: rgba(16, 22, 36, 0.78);
+            --surface-border: rgba(0, 212, 255, 0.25);
+            --accent-cyan: #00d4ff;
+            --accent-ps-blue: #00439c;
+            --accent-xbox-green: #107c10;
+            --accent-xbox-neon: #00ff66;
+            --accent-fight-gold: #ffb703;
+            --accent-fight-red: #ff0055;
+            --accent-purple: #9d4edd;
+            --accent-emerald: #10b981;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --active-glow: rgba(0, 212, 255, 0.4);
+            --btn-scale: 1;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            touch-action: none;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: radial-gradient(circle at 50% 20%, #111728 0%, #06080d 100%);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+            color: var(--text-main);
+        }
+
+        /* Ambient glowing background accent */
+        .ambient-glow {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.15;
+            pointer-events: none;
+            z-index: 0;
+            transition: background 0.4s;
+        }
+        .ambient-left { top: -50px; left: -50px; background: var(--accent-cyan); }
+        .ambient-right { bottom: -50px; right: -50px; background: var(--accent-purple); }
+
+        /* Top Centered Floating HUD Navigation Bar */
+        .top-bar {
+            position: absolute;
+            top: 6px;
+            left: 50%;
+            transform: translateX(-50%);
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            z-index: 100;
+            background: rgba(14, 18, 30, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 22px;
+            padding: 2px 10px;
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+            white-space: nowrap;
+            max-width: 96vw;
+            pointer-events: auto !important;
+            touch-action: manipulation !important;
+        }
+
+        .top-bar * {
+            touch-action: manipulation !important;
+        }
+
+        .brand-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .badge-slot {
+            background: rgba(0, 212, 255, 0.15) !important;
+            border: 1.5px solid var(--accent-cyan) !important;
+            color: var(--accent-cyan) !important;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 4px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            pointer-events: auto !important;
+            touch-action: manipulation !important;
+            outline: none;
+            font-family: inherit;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.35);
+        }
+
+        .badge-slot:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 14px var(--accent-cyan);
+        }
+
+        .badge-slot:active {
+            transform: scale(0.92);
+        }
+
+        .badge-slot.p2 {
+            background: rgba(255, 0, 85, 0.2) !important;
+            border-color: #ff0055 !important;
+            color: #ff0055 !important;
+            box-shadow: 0 0 14px rgba(255, 0, 85, 0.6) !important;
+        }
+
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: rgba(14, 18, 28, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 4px 10px;
+            border-radius: 20px;
+            backdrop-filter: blur(8px);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ef4444;
+            box-shadow: 0 0 8px #ef4444;
+        }
+
+        .status-dot.online {
+            background: var(--accent-emerald);
+            box-shadow: 0 0 10px var(--accent-emerald);
+        }
+
+        /* Top Action Buttons */
+        .action-nav-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-nav {
+            background: rgba(18, 24, 38, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: var(--text-main);
+            font-size: 11px;
+            font-weight: 700;
+            padding: 5px 10px;
+            border-radius: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            backdrop-filter: blur(6px);
+            transition: all 0.15s;
+            pointer-events: auto !important;
+            touch-action: manipulation !important;
+            outline: none;
+            font-family: inherit;
+        }
+
+        .btn-nav:active {
+            transform: scale(0.94);
+        }
+
+        .btn-profile-active {
+            background: rgba(0, 212, 255, 0.2);
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+
+        /* Mode Banner */
+        .profile-pill {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .profile-ps5 { background: rgba(0, 70, 190, 0.4); border: 1px solid #0066ff; color: #8ec5fc; }
+        .profile-xbox { background: rgba(16, 124, 16, 0.4); border: 1px solid #00ff66; color: #a3e635; }
+        .profile-fight { background: rgba(255, 183, 3, 0.3); border: 1px solid #ffb703; color: #ffdd00; }
+
+        /* Main Controller Canvas */
+        .controller-root {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            padding: 48px 12px 10px 12px;
+            overflow: hidden;
+            z-index: 10;
+        }
+
+        /* Shoulder Triggers (L1, L2, R1, R2 / LB, LT, RB, RT) */
+        .shoulder-group-left {
+            position: absolute;
+            top: 48px;
+            left: 12px;
+            display: flex;
+            gap: 6px;
+            z-index: 50;
+        }
+
+        .shoulder-group-right {
+            position: absolute;
+            top: 48px;
+            right: 12px;
+            display: flex;
+            gap: 6px;
+            z-index: 50;
+        }
+
+        .btn-shoulder {
+            width: 72px;
+            height: 38px;
+            background: linear-gradient(180deg, #1f273b 0%, #121624 100%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--text-main);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            position: relative;
+            overflow: hidden;
+            transition: background 0.1s, transform 0.05s;
+        }
+
+        .btn-shoulder .trigger-fill {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 0%;
+            background: var(--accent-cyan);
+            opacity: 0.35;
+            pointer-events: none;
+            transition: height 0.05s;
+        }
+
+        .btn-shoulder.active {
+            background: linear-gradient(180deg, var(--accent-cyan) 0%, #0088cc 100%);
+            color: #000;
+            transform: translateY(2px);
+            box-shadow: 0 0 16px var(--accent-cyan);
+        }
+
+        /* D-Pad Container */
+        .dpad-container {
+            position: absolute;
+            width: 130px;
+            height: 130px;
+            z-index: 60;
+            transition: top 0.3s cubic-bezier(0.4, 0, 0.2, 1), left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* PS5 Symmetric placement */
+        .pos-ps5-dpad { top: 96px; left: 16px; }
+        /* Xbox Asymmetric placement */
+        .pos-xbox-dpad { bottom: 16px; left: 24px; }
+
+        .dpad-btn {
+            position: absolute;
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #1b2336 0%, #0e1320 100%);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: var(--text-muted);
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+        }
+
+        .dpad-btn.active {
+            background: var(--accent-cyan);
+            color: #000;
+            box-shadow: 0 0 16px var(--accent-cyan);
+        }
+
+        .dpad-up    { top: 0; left: 43px; }
+        .dpad-down  { bottom: 0; left: 43px; }
+        .dpad-left  { top: 43px; left: 0; }
+        .dpad-right { top: 43px; right: 0; }
+
+        /* Action Buttons Container (PS5 / XBOX) */
+        .action-container {
+            position: absolute;
+            top: 96px;
+            right: 16px;
+            width: 130px;
+            height: 130px;
+            z-index: 60;
+        }
+
+        .action-btn {
+            position: absolute;
+            width: 44px;
+            height: 44px;
+            background: radial-gradient(circle, #1a2235 0%, #0f1422 100%);
+            border: 1.5px solid rgba(255, 255, 255, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 17px;
+            font-weight: 900;
+            border-radius: 50%;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45);
+            transition: transform 0.05s;
+        }
+
+        .btn-top    { top: 0; left: 43px; }
+        .btn-bottom { bottom: 0; left: 43px; }
+        .btn-left   { top: 43px; left: 0; }
+        .btn-right  { top: 43px; right: 0; }
+
+        /* PS5 Colors */
+        .theme-ps .btn-top    { color: #10b981; border-color: rgba(16, 185, 129, 0.5); }
+        .theme-ps .btn-bottom { color: #00d4ff; border-color: rgba(0, 212, 255, 0.5); }
+        .theme-ps .btn-left   { color: #ff2a6d; border-color: rgba(255, 42, 109, 0.5); }
+        .theme-ps .btn-right  { color: #ff0055; border-color: rgba(255, 0, 85, 0.5); }
+
+        /* Xbox Colors */
+        .theme-xbox .btn-top    { color: #ffb703; border-color: rgba(255, 183, 3, 0.6); }   /* Y (Yellow) */
+        .theme-xbox .btn-bottom { color: #10b981; border-color: rgba(16, 185, 129, 0.6); } /* A (Green) */
+        .theme-xbox .btn-left   { color: #00d4ff; border-color: rgba(0, 212, 255, 0.6); }   /* X (Blue) */
+        .theme-xbox .btn-right  { color: #ff2a6d; border-color: rgba(255, 42, 109, 0.6); } /* B (Red) */
+
+        .action-btn.active {
+            transform: scale(0.92);
+            filter: brightness(1.6);
+            background: #fff !important;
+            color: #000 !important;
+            box-shadow: 0 0 20px #fff;
+        }
+
+        /* Analog Sticks */
+        .stick-container {
+            position: absolute;
+            width: 124px;
+            height: 124px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(20, 28, 44, 0.45) 0%, rgba(10, 14, 22, 0.85) 100%);
+            border: 2px dashed rgba(0, 212, 255, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 70;
+            transition: top 0.3s cubic-bezier(0.4, 0, 0.2, 1), left 0.3s cubic-bezier(0.4, 0, 0.2, 1), bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* PS5 Sticks */
+        .pos-ps5-stick-left  { bottom: 14px; left: 160px; }
+        .pos-ps5-stick-right { bottom: 14px; right: 160px; }
+
+        /* Xbox Sticks (Asymmetric Left Stick Up!) */
+        .pos-xbox-stick-left  { top: 96px; left: 24px; }
+        .pos-xbox-stick-right { bottom: 14px; right: 160px; }
+
+        .stick-thumb {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #2a3650 0%, #121824 100%);
+            border: 2px solid var(--accent-cyan);
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--accent-cyan);
+            position: absolute;
+            pointer-events: none;
+            transition: transform 0.04s ease-out;
+        }
+
+        .stick-thumb.xbox-thumb {
+            border-color: var(--accent-xbox-neon);
+            color: var(--accent-xbox-neon);
+            box-shadow: 0 4px 15px rgba(0, 255, 102, 0.35);
+        }
+
+        /* Dedicated L3 / R3 Buttons */
+        .btn-stick-click {
+            position: absolute;
+            top: -26px;
+            width: 44px;
+            height: 22px;
+            background: rgba(18, 24, 38, 0.85);
+            border: 1px solid var(--accent-cyan);
+            border-radius: 6px;
+            color: var(--accent-cyan);
+            font-size: 10px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 75;
+        }
+        .btn-stick-click.active {
+            background: var(--accent-cyan);
+            color: #000;
+        }
+
+        /* Center Section (Touchpad, PS / Xbox Home, Options, Share/View) */
+        .center-section {
+            position: absolute;
+            top: 48px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            z-index: 55;
+        }
+
+        .touchpad {
+            width: 170px;
+            height: 76px;
+            background: linear-gradient(180deg, #151c2c 0%, #0c101a 100%);
+            border: 1.5px solid rgba(0, 212, 255, 0.35);
+            border-radius: 12px;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.6), 0 4px 15px rgba(0, 212, 255, 0.15);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.4);
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+        }
+        .touchpad.active {
+            border-color: #fff;
+            background: rgba(0, 212, 255, 0.2);
+            color: #fff;
+        }
+
+        .touchpad-hint {
+            font-size: 8px;
+            color: var(--text-muted);
+            margin-top: 2px;
+            letter-spacing: 0.5px;
+        }
+
+        .center-btn-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-home-logo {
+            width: 48px;
+            height: 32px;
+            background: #151b29;
+            border: 1.5px solid var(--accent-cyan);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 900;
+            color: var(--accent-cyan);
+            box-shadow: 0 0 12px rgba(0, 212, 255, 0.3);
+            cursor: pointer;
+        }
+
+        .btn-home-logo.xbox-nexus {
+            border-color: var(--accent-xbox-neon);
+            color: var(--accent-xbox-neon);
+            box-shadow: 0 0 12px rgba(0, 255, 102, 0.3);
+        }
+
+        .btn-home-logo.active {
+            background: #fff;
+            color: #000;
+        }
+
+        .btn-micro {
+            width: 44px;
+            height: 26px;
+            background: rgba(18, 24, 38, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            font-weight: 800;
+            color: var(--text-muted);
+        }
+        .btn-micro.active {
+            background: #fff;
+            color: #000;
+        }
+
+        /* Pro Paddles M1 & M2 */
+        .paddle-m1 {
+            position: absolute;
+            bottom: 10px;
+            left: 16px;
+            width: 58px;
+            height: 30px;
+            background: rgba(20, 26, 40, 0.85);
+            border: 1.5px solid var(--accent-fight-gold);
+            border-radius: 8px;
+            color: var(--accent-fight-gold);
+            font-size: 10px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 80;
+        }
+        .paddle-m2 {
+            position: absolute;
+            bottom: 10px;
+            right: 16px;
+            width: 58px;
+            height: 30px;
+            background: rgba(20, 26, 40, 0.85);
+            border: 1.5px solid var(--accent-fight-gold);
+            border-radius: 8px;
+            color: var(--accent-fight-gold);
+            font-size: 10px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 80;
+        }
+        .paddle-m1.active, .paddle-m2.active {
+            background: var(--accent-fight-gold);
+            color: #000;
+            box-shadow: 0 0 14px var(--accent-fight-gold);
+        }
+
+        /* =========================================================
+           FIGHTING GAME / ARCADE FIGHTSTICK / LEVERLESS LAYOUT
+           ========================================================= */
+        .fight-panel {
+            position: absolute;
+            top: 48px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: none;
+            z-index: 90;
+        }
+        .mode-fighting .fight-panel {
+            display: block;
+        }
+        .mode-fighting #actionContainer,
+        .mode-fighting #dpadContainer,
+        .mode-fighting #leftStickContainer,
+        .mode-fighting #rightStickContainer,
+        .mode-fighting #centerSection,
+        .mode-fighting #leftShoulders,
+        .mode-fighting #rightShoulders,
+        .mode-fighting #paddleM1,
+        .mode-fighting #paddleM2 {
+            display: none !important;
+        }
+
+        /* Fightstick 8-Button Grid (Right Side) */
+        .fight-grid-right {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: grid;
+            grid-template-columns: repeat(4, 58px);
+            grid-gap: 12px 10px;
+            z-index: 92;
+        }
+
+        .btn-fight-arcade {
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            font-weight: 900;
+            cursor: pointer;
+            transition: transform 0.05s;
+        }
+
+        .btn-fight-arcade .arcade-sub {
+            font-size: 8px;
+            font-weight: 700;
+            opacity: 0.8;
+            margin-top: 1px;
+        }
+
+        .btn-fight-arcade:active, .btn-fight-arcade.active {
+            transform: scale(0.92);
+            filter: brightness(1.6);
+            box-shadow: 0 0 22px #fff;
+            color: #000 !important;
+            background: #fff !important;
+        }
+
+        /* Fightstick button colors */
+        .btn-lp { background: radial-gradient(circle, #2563eb 0%, #1e3a8a 100%); color: #fff; border-color: #60a5fa; } /* Square / X */
+        .btn-mp { background: radial-gradient(circle, #eab308 0%, #854d0e 100%); color: #fff; border-color: #fde047; } /* Triangle / Y */
+        .btn-hp { background: radial-gradient(circle, #ef4444 0%, #991b1b 100%); color: #fff; border-color: #f87171; } /* R1 / RB */
+        .btn-3p { background: radial-gradient(circle, #9333ea 0%, #581c87 100%); color: #fff; border-color: #c084fc; } /* L1 / LB */
+
+        .btn-lk { background: radial-gradient(circle, #0284c7 0%, #075985 100%); color: #fff; border-color: #38bdf8; } /* Cross / A */
+        .btn-mk { background: radial-gradient(circle, #ca8a04 0%, #713f12 100%); color: #fff; border-color: #facc15; } /* Circle / B */
+        .btn-hk { background: radial-gradient(circle, #dc2626 0%, #7f1d1d 100%); color: #fff; border-color: #ef4444; } /* R2 / RT */
+        .btn-3k { background: radial-gradient(circle, #7e22ce 0%, #3b0764 100%); color: #fff; border-color: #a855f7; } /* L2 / LT */
+
+        /* Fighting Macros Row (Drive Impact, Heat Smash, Throw, Parry) */
+        .fight-macro-bar {
+            position: absolute;
+            bottom: 12px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 92;
+        }
+
+        .btn-fight-macro {
+            padding: 6px 14px;
+            height: 34px;
+            background: rgba(22, 30, 46, 0.9);
+            border: 1.5px solid var(--accent-fight-gold);
+            border-radius: 8px;
+            color: var(--accent-fight-gold);
+            font-size: 11px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+        }
+        .btn-fight-macro.active {
+            background: var(--accent-fight-gold);
+            color: #000;
+            box-shadow: 0 0 16px var(--accent-fight-gold);
+        }
+
+        /* Fighting Left Controls (Joystick & Hitbox Switcher) */
+        .fight-left-controls {
+            position: absolute;
+            top: 10px;
+            left: 20px;
+            width: 280px;
+            height: 250px;
+            z-index: 92;
+        }
+
+        .fight-mode-toggle-bar {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .fight-toggle-tab {
+            padding: 5px 12px;
+            background: rgba(18, 24, 38, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .fight-toggle-tab.active {
+            background: rgba(255, 183, 3, 0.25);
+            border-color: var(--accent-fight-gold);
+            color: var(--accent-fight-gold);
+            box-shadow: 0 0 12px rgba(255, 183, 3, 0.3);
+        }
+
+        /* Sanwa-Style Arcade Joystick */
+        .fight-stick-container {
+            position: relative;
+            width: 154px;
+            height: 154px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #1a2234 0%, #0c101a 100%);
+            border: 3px solid rgba(255, 183, 3, 0.4);
+            box-shadow: inset 0 4px 15px rgba(0, 0, 0, 0.8), 0 6px 20px rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 10px;
+        }
+
+        /* 8-Way Octagonal Gate Direction Indicators */
+        .fight-gate-marker {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(255, 183, 3, 0.4);
+        }
+        .gate-n  { top: 6px; left: calc(50% - 3px); }
+        .gate-s  { bottom: 6px; left: calc(50% - 3px); }
+        .gate-w  { left: 6px; top: calc(50% - 3px); }
+        .gate-e  { right: 6px; top: calc(50% - 3px); }
+        .gate-nw { top: 22px; left: 22px; }
+        .gate-ne { top: 22px; right: 22px; }
+        .gate-sw { bottom: 22px; left: 22px; }
+        .gate-se { bottom: 22px; right: 22px; }
+
+        /* Ball-top Knob (Glossy Sanwa Japanese Arcade Ball) */
+        .fight-stick-ball {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 30%, #ff5252 0%, #dc2626 50%, #7f1d1d 100%);
+            border: 2px solid #f87171;
+            box-shadow: 0 8px 20px rgba(220, 38, 38, 0.5), inset 0 2px 6px rgba(255, 255, 255, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 900;
+            color: #fff;
+            position: absolute;
+            pointer-events: none;
+            transition: transform 0.04s ease-out;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+        }
+
+        /* Leverless / Hitbox Movement Controls (Left Side) */
+        .fight-leverless-left {
+            position: relative;
+            width: 260px;
+            height: 180px;
+            display: none;
+        }
+
+        .btn-hitbox {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle, #2a344d 0%, #131929 100%);
+            border: 2px solid var(--accent-cyan);
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 900;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            transition: transform 0.05s;
+        }
+        .btn-hitbox.active {
+            background: var(--accent-cyan) !important;
+            color: #000 !important;
+            box-shadow: 0 0 20px var(--accent-cyan);
+        }
+
+        .btn-hitbox-left  { width: 52px; height: 52px; top: 18px; left: 10px; }
+        .btn-hitbox-down  { width: 52px; height: 52px; top: 28px; left: 74px; }
+        .btn-hitbox-right { width: 52px; height: 52px; top: 20px; left: 138px; }
+        /* Big Thumb Up / Jump Button */
+        .btn-hitbox-jump  { width: 66px; height: 66px; top: 85px; left: 88px; border-color: #ff0055; color: #ff0055; }
+        .btn-hitbox-jump.active { background: #ff0055 !important; color: #fff !important; box-shadow: 0 0 22px #ff0055; }
+
+        .fight-center-bar {
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            z-index: 93;
+        }
+
+        /* =========================================================
+           POV & GYROSCOPE CAMERA HUD / OVERLAY
+           ========================================================= */
+        .pov-crosshair-hud {
+            position: absolute;
+            top: 48px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 140px;
+            height: 60px;
+            border-radius: 10px;
+            background: rgba(14, 20, 32, 0.7);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 85;
+            backdrop-filter: blur(6px);
+        }
+        .pov-active .pov-crosshair-hud {
+            display: flex;
+        }
+
+        .pov-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--accent-cyan);
+            box-shadow: 0 0 10px var(--accent-cyan);
+            transition: transform 0.05s ease-out;
+        }
+
+        .pov-label {
+            font-size: 8px;
+            font-weight: 800;
+            color: var(--accent-cyan);
+            letter-spacing: 1px;
+            margin-top: 4px;
+        }
+
+        /* Settings Drawer Modal (Fully Scrollable via Touch and Mouse) */
+        .modal-drawer {
+            position: fixed;
+            top: 0;
+            right: -350px;
+            width: 330px;
+            height: 100%;
+            max-height: 100vh;
+            background: rgba(12, 16, 26, 0.97);
+            border-left: 1px solid rgba(0, 212, 255, 0.35);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            z-index: 300;
+            box-shadow: -10px 0 40px rgba(0, 0, 0, 0.85);
+            transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            padding: 20px 20px 80px 20px;
+            overflow-y: auto !important;
+            overflow-x: hidden;
+            touch-action: pan-y !important;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-y: contain;
+        }
+
+        .modal-drawer * {
+            touch-action: pan-y;
+        }
+
+        .modal-drawer input[type="range"] {
+            touch-action: pan-x !important;
+        }
+
+        /* Sleek glowing scrollbar */
+        .modal-drawer::-webkit-scrollbar {
+            width: 6px;
+        }
+        .modal-drawer::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+        .modal-drawer::-webkit-scrollbar-thumb {
+            background: var(--accent-cyan);
+            border-radius: 4px;
+            box-shadow: 0 0 8px var(--accent-cyan);
+        }
+
+        .modal-drawer.open {
+            right: 0;
+        }
+
+        .drawer-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .drawer-title {
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-close-drawer {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .setting-group {
+            margin-bottom: 18px;
+        }
+
+        .setting-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .profile-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .btn-opt {
+            background: rgba(22, 30, 46, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: var(--text-muted);
+            padding: 8px 4px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-opt.active {
+            background: rgba(0, 212, 255, 0.2);
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+
+        /* Theme Cards & Color Swatches (Console-Categorized) */
+        .theme-category-tabs {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            margin-bottom: 8px;
+            margin-top: 4px;
+        }
+
+        .theme-tab-btn {
+            background: rgba(22, 30, 46, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: var(--text-muted);
+            padding: 6px 2px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 800;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .theme-tab-btn.active {
+            background: rgba(0, 212, 255, 0.2);
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+        }
+
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        .theme-card {
+            background: rgba(22, 30, 46, 0.7);
+            border: 1.5px solid rgba(255, 255, 255, 0.12);
+            border-radius: 10px;
+            padding: 8px 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        .theme-card:active {
+            transform: scale(0.95);
+        }
+
+        .theme-card.active {
+            border-color: var(--accent-cyan);
+            background: rgba(0, 212, 255, 0.15);
+            color: #fff;
+            box-shadow: 0 0 14px var(--accent-cyan);
+        }
+
+        .theme-preview {
+            width: 100%;
+            height: 18px;
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+        }
+
+        .color-swatches {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+
+        .color-swatch {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.15s;
+            position: relative;
+        }
+
+        .color-swatch:active {
+            transform: scale(0.9);
+        }
+
+        .color-swatch.active {
+            border-color: #fff;
+            transform: scale(1.18);
+            box-shadow: 0 0 14px currentColor;
+        }
+
+        .color-swatch.active::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 14px;
+            font-weight: 900;
+            color: #000;
+            text-shadow: 0 0 2px #fff;
+        }
+
+        /* Slider Controls */
+        .range-slider {
+            width: 100%;
+            height: 6px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            outline: none;
+        }
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--accent-cyan);
+            cursor: pointer;
+            box-shadow: 0 0 8px var(--accent-cyan);
+        }
+
+        /* Toggle Switches */
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 0;
+            cursor: pointer;
+        }
+        .toggle-track {
+            width: 40px;
+            height: 22px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            position: relative;
+            transition: background 0.2s;
+        }
+        .toggle-track.checked {
+            background: var(--accent-emerald);
+        }
+        .toggle-knob {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #fff;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            transition: left 0.2s;
+        }
+        .toggle-track.checked .toggle-knob {
+            left: 20px;
+        }
+
+        /* Draggable highlight in edit mode */
+        .editing .draggable {
+            outline: 2px dashed var(--accent-emerald) !important;
+            opacity: 0.9;
+            cursor: move;
+            transition: outline 0.15s, box-shadow 0.15s;
+        }
+
+        .editing .draggable.selected {
+            outline: 2.5px solid var(--accent-cyan) !important;
+            box-shadow: 0 0 25px rgba(0, 212, 255, 0.85) !important;
+            opacity: 1;
+        }
+
+        .edit-toolbar {
+            position: absolute;
+            top: 48px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(14, 18, 30, 0.96);
+            border: 1px solid var(--accent-emerald);
+            border-radius: 24px;
+            padding: 6px 14px;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            z-index: 250;
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.7);
+            white-space: nowrap;
+            max-width: 95vw;
+        }
+        .edit-toolbar.active {
+            display: flex;
+        }
+
+        /* In-Game Live Game Rumble Animation & Controller Shudder */
+        @keyframes rumbleMicroShake {
+            0% { transform: scale(var(--controller-scale, 1)) translate(0, 0); }
+            20% { transform: scale(var(--controller-scale, 1)) translate(-1.5px, 1.2px); }
+            40% { transform: scale(var(--controller-scale, 1)) translate(1.5px, -1.2px); }
+            60% { transform: scale(var(--controller-scale, 1)) translate(-1.2px, -1.2px); }
+            80% { transform: scale(var(--controller-scale, 1)) translate(1.2px, 1.2px); }
+            100% { transform: scale(var(--controller-scale, 1)) translate(0, 0); }
+        }
+
+        body.rumble-vibrating #controllerRoot {
+            animation: rumbleMicroShake 0.05s infinite linear;
+        }
+
+        body.rumble-vibrating .ambient-left,
+        body.rumble-vibrating .ambient-right {
+            filter: blur(40px) brightness(1.8) !important;
+            opacity: 0.95 !important;
+        }
+
+        @keyframes pulseGlow {
+            from { box-shadow: 0 0 6px #ffb703; opacity: 0.8; }
+            to { box-shadow: 0 0 16px #ffb703; opacity: 1; }
+        }
+
+        /* User Profile Presets & Management UI */
+        .profile-select {
+            background: rgba(14, 20, 34, 0.95);
+            color: #f8fafc;
+            border: 1px solid rgba(0, 212, 255, 0.35);
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 12px;
+            font-weight: 700;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .profile-select:focus {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.4);
+        }
+
+        /* Sleek Gamer HUD Toast Notification */
+        .profile-toast {
+            position: fixed;
+            top: 52px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-24px);
+            background: rgba(14, 18, 30, 0.95);
+            border: 1px solid var(--accent-cyan);
+            box-shadow: 0 4px 25px rgba(0, 212, 255, 0.45);
+            color: var(--text-main);
+            padding: 8px 20px;
+            border-radius: 22px;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+        .profile-toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* ========================================================
+           DYNAMIC BACKGROUND GRAPHICS & VISUAL FX ENGINE
+           ======================================================== */
+        :root {
+            --bg-gfx-opacity: 0.85;
+        }
+
+        .bg-graphics-layer {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
+            opacity: var(--bg-gfx-opacity, 0.85);
+            transition: opacity 0.35s ease;
+        }
+
+        /* Fluid Multi-Color Aurora Mesh / Cosmic Plasma */
+        .aurora-container {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        .aurora-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.45;
+            mix-blend-mode: screen;
+            will-change: transform;
+            pointer-events: none;
+        }
+
+        .orb-cyan {
+            width: 400px;
+            height: 400px;
+            top: -80px;
+            left: -50px;
+            background: radial-gradient(circle, var(--accent-cyan) 0%, rgba(0, 212, 255, 0) 70%);
+            animation: driftOrb1 16s ease-in-out infinite alternate;
+        }
+
+        .orb-magenta {
+            width: 440px;
+            height: 440px;
+            bottom: -100px;
+            right: -70px;
+            background: radial-gradient(circle, #ff007f 0%, rgba(255, 0, 127, 0) 70%);
+            animation: driftOrb2 20s ease-in-out infinite alternate;
+        }
+
+        .orb-purple {
+            width: 380px;
+            height: 380px;
+            top: 20%;
+            right: 18%;
+            background: radial-gradient(circle, #8b5cf6 0%, rgba(139, 92, 246, 0) 70%);
+            animation: driftOrb3 18s ease-in-out infinite alternate;
+        }
+
+        .orb-emerald {
+            width: 350px;
+            height: 350px;
+            bottom: 12%;
+            left: 20%;
+            background: radial-gradient(circle, #10b981 0%, rgba(16, 185, 129, 0) 70%);
+            animation: driftOrb4 22s ease-in-out infinite alternate;
+        }
+
+        .orb-amber {
+            width: 320px;
+            height: 320px;
+            top: 36%;
+            left: 45%;
+            background: radial-gradient(circle, #ffb703 0%, rgba(255, 183, 3, 0) 70%);
+            animation: driftOrb5 14s ease-in-out infinite alternate;
+        }
+
+        @keyframes driftOrb1 {
+            0%   { transform: translate(0, 0) scale(1); }
+            50%  { transform: translate(70px, 50px) scale(1.15); }
+            100% { transform: translate(20px, 90px) scale(0.95); }
+        }
+        @keyframes driftOrb2 {
+            0%   { transform: translate(0, 0) scale(1); }
+            50%  { transform: translate(-80px, -60px) scale(1.2); }
+            100% { transform: translate(-30px, -110px) scale(0.9); }
+        }
+        @keyframes driftOrb3 {
+            0%   { transform: translate(0, 0) scale(1); }
+            50%  { transform: translate(-60px, 40px) scale(1.1); }
+            100% { transform: translate(40px, -30px) scale(0.95); }
+        }
+        @keyframes driftOrb4 {
+            0%   { transform: translate(0, 0) scale(1); }
+            50%  { transform: translate(50px, -40px) scale(1.18); }
+            100% { transform: translate(-30px, 50px) scale(0.9); }
+        }
+        @keyframes driftOrb5 {
+            0%   { transform: translate(0, 0) scale(0.9); opacity: 0.3; }
+            50%  { transform: translate(-40px, -30px) scale(1.25); opacity: 0.55; }
+            100% { transform: translate(50px, 30px) scale(1); opacity: 0.35; }
+        }
+
+        /* Perspective 3D Cyber Grid */
+        .cyber-grid-container {
+            position: absolute;
+            inset: 0;
+            perspective: 450px;
+            overflow: hidden;
+            pointer-events: none;
+            opacity: 0.28;
+            transition: opacity 0.5s ease;
+        }
+
+        .cyber-grid-plane {
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            top: 25%;
+            left: -50%;
+            background-image: 
+                linear-gradient(to right, rgba(0, 212, 255, 0.2) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(0, 212, 255, 0.2) 1px, transparent 1px);
+            background-size: 38px 38px;
+            transform: rotateX(68deg);
+            transform-origin: 50% 0;
+            animation: gridScroll 18s linear infinite;
+            mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 80%);
+            -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 80%);
+        }
+
+        @keyframes gridScroll {
+            0% { transform: rotateX(68deg) translateY(0); }
+            100% { transform: rotateX(68deg) translateY(38px); }
+        }
+
+        .cyber-grid-horizon {
+            position: absolute;
+            top: 28%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent 0%, var(--accent-cyan) 50%, transparent 100%);
+            box-shadow: 0 0 20px var(--accent-cyan);
+            opacity: 0.65;
+        }
+
+        /* Floating Holographic Sacred Glyphs */
+        .floating-glyphs-layer {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+            transition: opacity 0.5s ease;
+        }
+
+        .floating-glyph {
+            position: absolute;
+            font-size: 22px;
+            font-weight: 900;
+            user-select: none;
+            pointer-events: none;
+            opacity: 0.45;
+            will-change: transform, opacity;
+            text-shadow: 0 0 14px currentColor, 0 0 28px currentColor;
+            animation: glyphFloat 12s ease-in-out infinite alternate;
+        }
+
+        @keyframes glyphFloat {
+            0% {
+                transform: translateY(0) rotate(0deg) scale(1);
+            }
+            50% {
+                transform: translateY(-24px) rotate(18deg) scale(1.15);
+                opacity: 0.75;
+            }
+            100% {
+                transform: translateY(16px) rotate(-14deg) scale(0.9);
+                opacity: 0.35;
+            }
+        }
+
+        /* Reactive Rumble Shockwave Ring */
+        .rumble-shockwave {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 80px;
+            height: 80px;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            border: 2px solid var(--accent-cyan);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        body.rumble-vibrating .rumble-shockwave {
+            animation: shockwaveSurge 0.4s infinite cubic-bezier(0.1, 0.8, 0.3, 1);
+        }
+
+        @keyframes shockwaveSurge {
+            0% {
+                width: 60px;
+                height: 60px;
+                opacity: 0.95;
+                border-color: #ff007f;
+                box-shadow: 0 0 18px #ff007f;
+            }
+            100% {
+                width: 520px;
+                height: 520px;
+                opacity: 0;
+                border-color: var(--accent-cyan);
+                box-shadow: 0 0 40px var(--accent-cyan);
+            }
+        }
+
+        /* Background Visual Style Presets */
+        /* 1. Cyber Aurora */
+        .fx-aurora .aurora-container { opacity: 1; }
+        .fx-aurora .cyber-grid-container { opacity: 0.25; }
+        .fx-aurora .floating-glyphs-layer { opacity: 0.65; }
+
+        /* 2. Synthwave */
+        .fx-synth .aurora-container { opacity: 0.6; }
+        .fx-synth .cyber-grid-container { opacity: 0.85; }
+        .fx-synth .cyber-grid-plane {
+            background-image: 
+                linear-gradient(to right, rgba(255, 0, 127, 0.35) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(0, 212, 255, 0.35) 1px, transparent 1px);
+        }
+        .fx-synth .cyber-grid-horizon {
+            background: linear-gradient(90deg, transparent 0%, #ff007f 50%, transparent 100%);
+            box-shadow: 0 0 28px #ff007f;
+        }
+
+        /* 3. Circuit Tech */
+        .fx-circuit .aurora-container { opacity: 0.3; }
+        .fx-circuit .cyber-grid-container { opacity: 0.6; }
+        .fx-circuit .cyber-grid-plane {
+            background-size: 24px 24px;
+        }
+        .fx-circuit .floating-glyphs-layer { opacity: 0.75; }
+
+        /* 4. Minimal Dark */
+        .fx-minimal .aurora-container { opacity: 0.15; }
+        .fx-minimal .cyber-grid-container { opacity: 0; }
+        .fx-minimal .floating-glyphs-layer { opacity: 0; }
+
+        .glyphs-hidden .floating-glyphs-layer { display: none !important; }
+    </style>
+</head>
+<body class="theme-ps">
+    <!-- Ambient glowing backgrounds -->
+    <div id="ambientLeft" class="ambient-glow ambient-left"></div>
+    <div id="ambientRight" class="ambient-glow ambient-right"></div>
+
+    <!-- Dynamic High-Tech Background Graphics Layer -->
+    <div id="bgGraphicsLayer" class="bg-graphics-layer fx-aurora">
+        <!-- Fluid Multi-Color Aurora Mesh -->
+        <div class="aurora-container">
+            <div class="aurora-orb orb-cyan"></div>
+            <div class="aurora-orb orb-magenta"></div>
+            <div class="aurora-orb orb-purple"></div>
+            <div class="aurora-orb orb-emerald"></div>
+            <div class="aurora-orb orb-amber"></div>
+        </div>
+
+        <!-- Perspective Cyber Grid -->
+        <div class="cyber-grid-container">
+            <div class="cyber-grid-plane"></div>
+            <div class="cyber-grid-horizon"></div>
+        </div>
+
+        <!-- Floating Holographic Sacred Glyphs -->
+        <div id="floatingGlyphs" class="floating-glyphs-layer"></div>
+
+        <!-- Reactive Rumble Shockwave Ring -->
+        <div id="rumbleShockwave" class="rumble-shockwave"></div>
+    </div>
+
+    <!-- Sleek Gamer HUD Toast Notification -->
+    <div id="profileToast" class="profile-toast">💾 Profile Loaded!</div>
+
+    <!-- Top Navigation Bar -->
+    <div class="top-bar">
+        <div class="brand-group">
+            <button id="btnPlayerSlot" class="badge-slot" type="button">🎮 P1</button>
+            <div id="profileBadge" class="profile-pill profile-ps5">PS5 DUALSENSE</div>
+            <div class="status-pill">
+                <div id="statusDot" class="status-dot"></div>
+                <span id="statusText">Connecting...</span>
+            </div>
+            <div id="hudRumblePill" class="status-pill" style="display: none; border-color: #ffb703; color: #ffb703; animation: pulseGlow 0.3s infinite alternate;">
+                <span style="font-size: 10px;">⚡</span>
+                <span style="font-size: 9px; font-weight: 800;">RUMBLE</span>
+            </div>
+        </div>
+
+        <div class="action-nav-group">
+            <button id="btnQuickMode" class="btn-nav">🔄 <span id="lblQuickMode">XBOX</span></button>
+            <button id="btnGyroToggle" class="btn-nav">🎯 POV</button>
+            <button id="btnSettings" class="btn-nav">⚙️</button>
+            <button id="btnFullscreen" class="btn-nav">⛶</button>
+        </div>
+    </div>
+
+    <!-- Edit Mode Toolbar with Position & Size Customization -->
+    <div id="editToolbar" class="edit-toolbar">
+        <span id="lblToolbarProfile" style="font-size: 10px; padding: 2px 7px; background: rgba(0, 212, 255, 0.15); border: 1px solid var(--accent-cyan); color: var(--accent-cyan); border-radius: 12px; font-weight: 800; white-space: nowrap;">PROFILE: DEFAULT</span>
+        <span id="lblSelectedElem" style="font-size: 11px; color: var(--accent-emerald); font-weight: 800;">🖐️ Tap button/stick to resize</span>
+        <div style="display: flex; align-items: center; gap: 4px; background: rgba(0,0,0,0.45); padding: 2px 6px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.12);">
+            <button id="btnElemScaleDown" class="btn-nav" style="padding: 2px 8px; font-size: 11px; font-weight: 900;">➖</button>
+            <span id="lblElemScale" style="font-size: 11px; font-weight: 800; min-width: 38px; text-align: center; color: var(--accent-cyan);">100%</span>
+            <button id="btnElemScaleUp" class="btn-nav" style="padding: 2px 8px; font-size: 11px; font-weight: 900;">➕</button>
+        </div>
+        <button id="btnSaveLayout" class="btn-nav" style="background: var(--accent-emerald); color: #000; font-weight: 800;">💾 Save</button>
+        <button id="btnResetLayout" class="btn-nav">🔄 Reset</button>
+        <button id="btnDoneEdit" class="btn-nav" style="border-color: #ef4444; color: #ef4444;">❌ Done</button>
+    </div>
+
+    <!-- POV Aim HUD (Crosshair Overlay) -->
+    <div id="povHud" class="pov-crosshair-hud">
+        <div id="povDot" class="pov-dot"></div>
+        <div class="pov-label">GYRO POV AIMING ACTIVE</div>
+    </div>
+
+    <!-- Controller Root Container -->
+    <div id="controllerRoot" class="controller-root">
+
+        <!-- =======================================================
+             DEFAULT LAYOUTS: PS5 DUALSENSE & XBOX SERIES X
+             ======================================================= -->
+
+        <!-- Top Shoulders L1, L2 / LB, LT -->
+        <div id="leftShoulders" class="shoulder-group-left draggable" data-title="Left Triggers (L1/L2)">
+            <div id="btnL2" class="btn-shoulder" data-mask="0" data-trigger="l2">
+                <span id="lblL2">L2</span>
+                <div class="trigger-fill" id="fillL2"></div>
+            </div>
+            <div id="btnL1" class="btn-shoulder" data-mask="16">
+                <span id="lblL1">L1</span>
+            </div>
+        </div>
+
+        <!-- Top Shoulders R1, R2 / RB, RT -->
+        <div id="rightShoulders" class="shoulder-group-right draggable" data-title="Right Triggers (R1/R2)">
+            <div id="btnR1" class="btn-shoulder" data-mask="32">
+                <span id="lblR1">R1</span>
+            </div>
+            <div id="btnR2" class="btn-shoulder" data-mask="0" data-trigger="r2">
+                <span id="lblR2">R2</span>
+                <div class="trigger-fill" id="fillR2"></div>
+            </div>
+        </div>
+
+        <!-- D-Pad -->
+        <div id="dpadContainer" class="dpad-container pos-ps5-dpad draggable" data-title="D-Pad">
+            <div id="btnDpadUp" class="dpad-btn dpad-up" data-mask="4096">▲</div>
+            <div id="btnDpadDown" class="dpad-btn dpad-down" data-mask="8192">▼</div>
+            <div id="btnDpadLeft" class="dpad-btn dpad-left" data-mask="16384">◀</div>
+            <div id="btnDpadRight" class="dpad-btn dpad-right" data-mask="32768">▶</div>
+        </div>
+
+        <!-- Left Analog Stick -->
+        <div id="leftStickContainer" class="stick-container pos-ps5-stick-left draggable" data-title="Left Stick">
+            <div id="btnL3" class="btn-stick-click" data-mask="256">L3</div>
+            <div id="leftThumb" class="stick-thumb">L</div>
+        </div>
+
+        <!-- Center Section (Touchpad, Home Logo, Share, Options) -->
+        <div id="centerSection" class="center-section draggable" data-title="Touchpad & Home">
+            <div id="psTouchpad" class="touchpad" data-mask="2048">
+                <span id="touchpadTitle">TOUCHPAD / POV SWIPE</span>
+                <span class="touchpad-hint">Drag to Look • Click for Map</span>
+            </div>
+            <div class="center-btn-row">
+                <div id="btnShare" class="btn-micro" data-mask="64">CREATE</div>
+                <div id="btnHome" class="btn-home-logo" data-mask="1024">PS</div>
+                <div id="btnOptions" class="btn-micro" data-mask="128">OPTIONS</div>
+            </div>
+        </div>
+
+        <!-- Right Face Action Buttons -->
+        <div id="actionContainer" class="action-container draggable" data-title="Action Buttons">
+            <div id="btnActionTop" class="action-btn btn-top" data-mask="8">△</div>
+            <div id="btnActionLeft" class="action-btn btn-left" data-mask="4">▢</div>
+            <div id="btnActionRight" class="action-btn btn-right" data-mask="2">○</div>
+            <div id="btnActionBottom" class="action-btn btn-bottom" data-mask="1">✕</div>
+        </div>
+
+        <!-- Right Analog Stick -->
+        <div id="rightStickContainer" class="stick-container pos-ps5-stick-right draggable" data-title="Right Stick">
+            <div id="btnR3" class="btn-stick-click" data-mask="512">R3</div>
+            <div id="rightThumb" class="stick-thumb">R</div>
+        </div>
+
+        <!-- Pro Back Paddles M1 & M2 -->
+        <div id="paddleM1" class="paddle-m1 draggable" data-mask="65536" data-title="Paddle M1">M1 (L3)</div>
+        <div id="paddleM2" class="paddle-m2 draggable" data-mask="131072" data-title="Paddle M2">M2 (R3)</div>
+
+        <!-- =======================================================
+             MODE 3: ARCADE FIGHTSTICK / LEVERLESS (HITBOX) LAYOUT
+             ======================================================= -->
+        <div id="fightPanel" class="fight-panel">
+            <!-- Center Controls for Fighting Mode -->
+            <div class="fight-center-bar">
+                <div class="btn-micro" data-mask="64">SELECT</div>
+                <div id="btnFightHome" class="btn-home-logo" data-mask="1024">PS</div>
+                <div class="btn-micro" data-mask="128">START</div>
+            </div>
+
+            <!-- Left Side: Arcade Joystick & Hitbox Toggle Container -->
+            <div id="fightLeftControls" class="fight-left-controls draggable" data-title="Arcade Stick/Hitbox">
+                <!-- Mode Switcher Tabs -->
+                <div class="fight-mode-toggle-bar">
+                    <div id="btnFightJoystickTab" class="fight-toggle-tab active">🕹️ JOYSTICK</div>
+                    <div id="btnFightHitboxTab" class="fight-toggle-tab">🎛️ HITBOX</div>
+                </div>
+
+                <!-- 1. Sanwa Japanese Arcade Joystick View -->
+                <div id="fightJoystickView">
+                    <div id="fightStickContainer" class="fight-stick-container">
+                        <!-- 8-Way Octagonal Gate Markers -->
+                        <div class="fight-gate-marker gate-n"></div>
+                        <div class="fight-gate-marker gate-ne"></div>
+                        <div class="fight-gate-marker gate-e"></div>
+                        <div class="fight-gate-marker gate-se"></div>
+                        <div class="fight-gate-marker gate-s"></div>
+                        <div class="fight-gate-marker gate-sw"></div>
+                        <div class="fight-gate-marker gate-w"></div>
+                        <div class="fight-gate-marker gate-nw"></div>
+                        <!-- Ball-top Arcade Knob -->
+                        <div id="fightStickBall" class="fight-stick-ball">🕹️</div>
+                    </div>
+                </div>
+
+                <!-- 2. Leverless Hitbox 4-Button Arc View -->
+                <div id="fightLeverless" class="fight-leverless-left">
+                    <div id="btnHitboxLeft" class="btn-hitbox btn-hitbox-left" data-mask="16384">◀</div>
+                    <div id="btnHitboxDown" class="btn-hitbox btn-hitbox-down" data-mask="8192">▼</div>
+                    <div id="btnHitboxRight" class="btn-hitbox btn-hitbox-right" data-mask="32768">▶</div>
+                    <div id="btnHitboxJump" class="btn-hitbox btn-hitbox-jump" data-mask="4096">▲<br><span style="font-size: 8px;">JUMP</span></div>
+                </div>
+            </div>
+
+            <!-- Right Side: 8-Button Pro Arcade Grid (Street Fighter / Tekken Standard) -->
+            <div id="fightGrid" class="fight-grid-right draggable" data-title="Arcade 8-Buttons">
+                <!-- Row 1: Punches (LP, MP, HP, 3P/ALL) -->
+                <div class="btn-fight-arcade btn-lp" data-mask="4">
+                    <span>LP</span>
+                    <span class="arcade-sub">▢ / X</span>
+                </div>
+                <div class="btn-fight-arcade btn-mp" data-mask="8">
+                    <span>MP</span>
+                    <span class="arcade-sub">△ / Y</span>
+                </div>
+                <div class="btn-fight-arcade btn-hp" data-mask="32">
+                    <span>HP</span>
+                    <span class="arcade-sub">R1 / RB</span>
+                </div>
+                <div class="btn-fight-arcade btn-3p" data-mask="16">
+                    <span>3P</span>
+                    <span class="arcade-sub">L1 / LB</span>
+                </div>
+
+                <!-- Row 2: Kicks (LK, MK, HK, 3K/ALL) -->
+                <div class="btn-fight-arcade btn-lk" data-mask="1">
+                    <span>LK</span>
+                    <span class="arcade-sub">✕ / A</span>
+                </div>
+                <div class="btn-fight-arcade btn-mk" data-mask="2">
+                    <span>MK</span>
+                    <span class="arcade-sub">○ / B</span>
+                </div>
+                <div class="btn-fight-arcade btn-hk" data-mask="0" data-trigger="r2">
+                    <span>HK</span>
+                    <span class="arcade-sub">R2 / RT</span>
+                </div>
+                <div class="btn-fight-arcade btn-3k" data-mask="0" data-trigger="l2">
+                    <span>3K</span>
+                    <span class="arcade-sub">L2 / LT</span>
+                </div>
+            </div>
+
+            <!-- Bottom Right: Quick Fighting Macros (Drive Impact / Heat, Throw, Parry) -->
+            <div id="fightMacroBar" class="fight-macro-bar draggable" data-title="Fighting Macros">
+                <div class="btn-fight-macro" data-macro="throw">👊 THROW (LP+LK)</div>
+                <div class="btn-fight-macro" data-macro="parry">🛡️ PARRY (MP+MK)</div>
+                <div class="btn-fight-macro" data-macro="impact" style="border-color: #ff0055; color: #ff0055;">🔥 HEAT / DI (HP+HK)</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- =======================================================
+         SETTINGS & PROFILE DRAWER (Slide-in Modal)
+         ======================================================= -->
+    <div id="settingsDrawer" class="modal-drawer">
+        <div class="drawer-header">
+            <div class="drawer-title">⚙️ Controller Settings</div>
+            <button id="btnCloseDrawer" class="btn-close-drawer">✕</button>
+        </div>
+
+        <!-- User Profiles & Layout Presets Section -->
+        <div class="setting-group" style="background: rgba(0, 212, 255, 0.08); border: 1px solid rgba(0, 212, 255, 0.28); border-radius: 12px; padding: 10px;">
+            <div class="setting-label" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="color: var(--accent-cyan); font-weight: 800; letter-spacing: 0.5px;">📁 USER PROFILES & LAYOUTS</span>
+                <span id="lblActiveProfileName" style="color: var(--accent-emerald); font-size: 10px; font-weight: 800;">ACTIVE: DEFAULT</span>
+            </div>
+
+            <div style="display: flex; gap: 6px; align-items: center; margin-bottom: 8px;">
+                <select id="selUserProfile" class="profile-select" style="flex: 1; height: 34px;">
+                </select>
+                <button id="btnNewProfile" class="btn-nav" style="padding: 0 10px; height: 34px; background: rgba(16, 185, 129, 0.2); border-color: var(--accent-emerald); color: var(--accent-emerald); font-weight: 800;" title="Create New Profile">➕ New</button>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-bottom: 6px;">
+                <button id="btnSaveCurrentProfile" class="btn-nav" style="justify-content: center; font-size: 10px; padding: 6px 2px; font-weight: 800; background: rgba(0, 212, 255, 0.18); border-color: var(--accent-cyan); color: var(--accent-cyan);" title="Save Current Layout & Settings">💾 Save</button>
+                <button id="btnRenameProfile" class="btn-nav" style="justify-content: center; font-size: 10px; padding: 6px 2px;" title="Rename Active Profile">✏️ Rename</button>
+                <button id="btnDeleteProfile" class="btn-nav" style="justify-content: center; font-size: 10px; padding: 6px 2px; border-color: #ef4444; color: #ef4444;" title="Delete Active Profile">🗑️ Delete</button>
+                <button id="btnResetProfile" class="btn-nav" style="justify-content: center; font-size: 10px; padding: 6px 2px; border-color: #f59e0b; color: #f59e0b;" title="Reset Profile to Defaults">🔄 Reset</button>
+            </div>
+
+            <div style="display: flex; gap: 6px; margin-top: 6px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 6px;">
+                <button id="btnExportProfile" class="btn-nav" style="flex: 1; justify-content: center; font-size: 10px; padding: 5px 6px;" title="Export Profile as JSON file">📤 Export JSON</button>
+                <button id="btnImportProfile" class="btn-nav" style="flex: 1; justify-content: center; font-size: 10px; padding: 5px 6px;" title="Import Profile from JSON file">📥 Import JSON</button>
+                <input type="file" id="fileProfileImport" accept=".json" style="display: none;">
+            </div>
+        </div>
+
+        <!-- Profile Selection -->
+        <div class="setting-group">
+            <div class="setting-label">CONTROLLER PROFILE</div>
+            <div class="profile-options">
+                <div id="optPs5" class="btn-opt active">🎮 PS5</div>
+                <div id="optXbox" class="btn-opt">🟢 Xbox</div>
+                <div id="optFight" class="btn-opt">🥋 Fight</div>
+            </div>
+        </div>
+
+        <!-- Theme & Color Customization (Console-Categorized) -->
+        <div class="setting-group">
+            <div class="setting-label">
+                <span>CONSOLE THEMES</span>
+                <span id="lblThemeName" style="color: var(--accent-cyan);">DUALSENSE GLACIER</span>
+            </div>
+
+            <!-- Console Category Switcher Tabs -->
+            <div class="theme-category-tabs">
+                <div id="tabCatPs5" class="theme-tab-btn active" data-cat="ps5">🎮 PS5 Editions</div>
+                <div id="tabCatXbox" class="theme-tab-btn" data-cat="xbox">🟢 Xbox Editions</div>
+                <div id="tabCatFight" class="theme-tab-btn" data-cat="fight">🥋 Fight Editions</div>
+            </div>
+
+            <!-- Dynamic Theme Cards Container (Rendered per console) -->
+            <div id="themeCardsContainer" class="theme-grid"></div>
+
+            <div class="setting-label" style="margin-top: 14px;">
+                <span>MATCHING ACCENT COLOR</span>
+                <span id="lblAccentColor" style="color: var(--accent-cyan);">GLACIER BLUE</span>
+            </div>
+            <!-- Dynamic Color Swatches Container (Rendered per console) -->
+            <div id="colorSwatchesContainer" class="color-swatches"></div>
+        </div>
+
+        <!-- Background Graphics & Visual FX Customization -->
+        <div class="setting-group">
+            <div class="setting-label">
+                <span>BACKGROUND GRAPHICS & FX</span>
+                <span id="lblBgGfxStyle" style="color: var(--accent-cyan);">CYBER AURORA</span>
+            </div>
+            <div class="profile-options" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-bottom: 8px;">
+                <div id="btnFxAurora" class="btn-opt active" data-fx="aurora">🌌 Cyber Aurora</div>
+                <div id="btnFxSynth" class="btn-opt" data-fx="synth">🌐 Synthwave Grid</div>
+                <div id="btnFxCircuit" class="btn-opt" data-fx="circuit">⚡ Cyber Circuit</div>
+                <div id="btnFxMinimal" class="btn-opt" data-fx="minimal">🌑 Minimal Dark</div>
+                <div id="btnToggleGlyphs" class="btn-opt active" style="grid-column: span 2; border-color: var(--accent-cyan); color: var(--accent-cyan);">✨ Floating Icons: ON</div>
+            </div>
+            <div style="margin-top: 8px;">
+                <div class="setting-label">
+                    <span>Glow & FX Brightness</span>
+                    <span id="lblGfxIntensity">85%</span>
+                </div>
+                <input id="sliderGfxIntensity" type="range" class="range-slider" min="20" max="100" step="5" value="85">
+            </div>
+        </div>
+
+        <!-- POV & Gyro Settings -->
+        <div class="setting-group">
+            <div class="setting-label">
+                <span>POV & GYROSCOPE AIM</span>
+                <span id="valGyroStatus" style="color: var(--accent-cyan);">OFF</span>
+            </div>
+            <div class="toggle-switch" id="toggleGyroSwitch">
+                <span style="font-size: 11px;">Enable Phone Tilt to Look/Aim</span>
+                <div class="toggle-track" id="trackGyro"><div class="toggle-knob"></div></div>
+            </div>
+            <div style="margin-top: 8px;">
+                <div class="setting-label">
+                    <span>POV Sensitivity</span>
+                    <span id="lblGyroSens">1.2x</span>
+                </div>
+                <input id="sliderGyroSens" type="range" class="range-slider" min="0.5" max="3.0" step="0.1" value="1.2">
+            </div>
+            <div class="toggle-switch" id="toggleInvertY">
+                <span style="font-size: 11px;">Invert POV Y-Axis</span>
+                <div class="toggle-track" id="trackInvertY"><div class="toggle-knob"></div></div>
+            </div>
+            <button id="btnCalibrateGyro" class="btn-nav" style="width: 100%; margin-top: 8px; justify-content: center;">🎯 Recalibrate Center Angle</button>
+        </div>
+
+        <!-- Analog Stick Tuning -->
+        <div class="setting-group">
+            <div class="setting-label">
+                <span>Stick Deadzone</span>
+                <span id="lblDeadzone">5%</span>
+            </div>
+            <input id="sliderDeadzone" type="range" class="range-slider" min="0" max="25" step="1" value="5">
+            <div style="margin-top: 10px;">
+                <div class="setting-label">
+                    <span>Stick Sensitivity</span>
+                    <span id="lblStickSens">100%</span>
+                </div>
+                <input id="sliderStickSens" type="range" class="range-slider" min="50" max="150" step="5" value="100">
+            </div>
+        </div>
+
+        <!-- Haptics Vibration & Game Rumble -->
+        <div class="setting-group">
+            <div class="setting-label">
+                <span>HAPTIC VIBRATION & GAME RUMBLE</span>
+                <span id="lblHapticLevel" style="color: var(--accent-cyan);">⚡ DUALSENSE HD</span>
+            </div>
+            <div class="profile-options">
+                <div id="hapticOff" class="btn-opt">Off</div>
+                <div id="hapticMed" class="btn-opt">Medium</div>
+                <div id="hapticHigh" class="btn-opt active">⚡ Strong (HD Rumble)</div>
+            </div>
+            <div style="display: flex; gap: 8px; margin-top: 8px;">
+                <button id="btnTestDirectVibe" class="btn-nav" style="flex: 1; justify-content: center; background: rgba(0, 255, 102, 0.2); border-color: #00ff66; color: #00ff66; font-weight: 800; padding: 10px 6px;">📳 Direct Vibrate Test</button>
+                <button id="btnTestRumble" class="btn-nav" style="flex: 1; justify-content: center; background: rgba(0, 212, 255, 0.18); border-color: var(--accent-cyan); color: var(--accent-cyan); font-weight: 700;">⚡ Game Rumble Demo</button>
+            </div>
+            <!-- Live Diagnostic Box -->
+            <div id="vibeDiagBox" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; padding: 8px 10px; margin-top: 8px; font-size: 11px; line-height: 1.4;">
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--text-muted);">Vibration Hardware API:</span>
+                    <span id="diagVibeSupport" style="font-weight: 800; color: var(--accent-cyan);">Checking...</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-top: 4px;">
+                    <span style="color: var(--text-muted);">Last Vibration Call:</span>
+                    <span id="diagLastResult" style="font-weight: 700; color: #ffb703;">Tap button to test</span>
+                </div>
+                <div id="diagHint" style="font-size: 10px; color: #94a3b8; margin-top: 6px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 5px;">
+                    💡 Tip: Android me phone settings > <b>Sound & Vibration</b> > <b>Touch Vibration / Haptics</b> ON hona zaroori hai.
+                </div>
+            </div>
+        </div>
+
+        <!-- Controller Overall Size Scale -->
+        <div class="setting-group" style="margin-top: 10px;">
+            <div class="setting-label">
+                <span>CONTROLLER OVERALL SIZE</span>
+                <span id="lblGlobalScale" style="color: var(--accent-cyan);">100%</span>
+            </div>
+            <div class="profile-options" style="margin-bottom: 8px;">
+                <div id="scalePreset85" class="btn-opt">85% Small</div>
+                <div id="scalePreset100" class="btn-opt active">100% Normal</div>
+                <div id="scalePreset120" class="btn-opt">120% Large</div>
+            </div>
+            <input id="sliderGlobalScale" type="range" class="range-slider" min="70" max="140" step="5" value="100">
+        </div>
+
+        <!-- Layout Customizer Actions -->
+        <div class="setting-group" style="margin-top: 10px;">
+            <div class="setting-label">LAYOUT POSITION & SIZE</div>
+            <button id="btnStartEditDrawer" class="btn-nav" style="width: 100%; justify-content: center; background: rgba(16, 185, 129, 0.2); border-color: var(--accent-emerald); color: var(--accent-emerald);">✏️ Customize Positions & Individual Sizes</button>
+        </div>
+    </div>
+
+    <!-- =======================================================
+         HIGH-PERFORMANCE TOUCH & INPUT JAVASCRIPT ENGINE
+         ======================================================= -->
+    <script>
+        // Controller Configuration & State
+        const CONFIG = {
+            profile: 'ps5', // 'ps5', 'xbox', 'fight'
+            slot: 1,
+            deadzone: 0.05,
+            stickSens: 1.0,
+            hapticIntensity: 40, // 0=off, 20=med, 40=strong
+            gyroEnabled: false,
+            gyroSens: 1.2,
+            invertY: false,
+            gyroCenterBeta: 0,
+            gyroCenterGamma: 0
+        };
+
+        const inputState = {
+            slot: 1,
+            lx: 0,
+            ly: 0,
+            rx: 0,
+            ry: 0,
+            l2: 0,
+            r2: 0,
+            buttons: 0
+        };
+
+        let isEditMode = false;
+        let ws = null;
+
+        // ==========================================
+        // ADVANCED DUAL-ENGINE HAPTIC & GAME RUMBLE
+        // ==========================================
+        let audioCtx = null;
+        let rumbleOsc = null;
+        let rumbleGain = null;
+        let rumbleInterval = null;
+        let isRumbleActive = false;
+        let lastLargeMotor = 0;
+        let lastSmallMotor = 0;
+
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                if (AudioContextClass) {
+                    audioCtx = new AudioContextClass();
+                }
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume().catch(() => {});
+            }
+        }
+
+        // Play synthetic acoustic haptic impulse (physically vibrates phone speaker coils!)
+        function playHapticThump(freq = 55, duration = 0.04, gainVal = 0.35) {
+            if (!CONFIG.hapticIntensity || !audioCtx) return;
+            try {
+                if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                const now = audioCtx.currentTime;
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, now);
+                osc.frequency.exponentialRampToValueAtTime(30, now + duration);
+
+                gain.gain.setValueAtTime(gainVal * (CONFIG.hapticIntensity / 25), now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start(now);
+                osc.stop(now + duration);
+            } catch (e) {}
+        }
+
+        const diagVibeSupport = document.getElementById('diagVibeSupport');
+        const diagLastResult = document.getElementById('diagLastResult');
+        const diagHint = document.getElementById('diagHint');
+
+        function checkVibeSupport() {
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            if (isIOS) {
+                if (diagVibeSupport) {
+                    diagVibeSupport.innerText = '🍎 iOS (Audio Haptic Active)';
+                    diagVibeSupport.style.color = '#ffb703';
+                }
+                if (diagHint) {
+                    diagHint.innerHTML = '⚠️ <b>Apple iOS</b>: Apple Safari does not support Web Vibration API. Sub-bass acoustic haptic active hai jo phone speaker coil ko vibrate karta hai.';
+                }
+            } else if ('vibrate' in navigator) {
+                if (diagVibeSupport) {
+                    diagVibeSupport.innerText = '🟢 Supported (Hardware Ready)';
+                    diagVibeSupport.style.color = 'var(--accent-emerald)';
+                }
+                if (diagHint) {
+                    diagHint.innerHTML = '💡 <b>Agar phone vibrate na kare</b>:<br>1. Phone Settings > <b>Sound & Vibration</b> > <b>Haptic Feedback / Touch Vibration</b> ON karein.<br>2. <b>Battery Saver</b> OFF karein (Battery Saver vibration band kar deta hai).';
+                }
+            } else {
+                if (diagVibeSupport) {
+                    diagVibeSupport.innerText = '❌ Browser Not Supported';
+                    diagVibeSupport.style.color = '#ef4444';
+                }
+            }
+        }
+        checkVibeSupport();
+
+        function updateDiagResult(ok, duration, errMsg = '') {
+            if (diagLastResult) {
+                if (ok) {
+                    diagLastResult.innerText = `✅ Triggered (${duration}ms)`;
+                    diagLastResult.style.color = 'var(--accent-emerald)';
+                } else {
+                    diagLastResult.innerText = `⚠️ Blocked by Phone OS (${errMsg || 'Check Phone Settings'})`;
+                    diagLastResult.style.color = '#ef4444';
+                }
+            }
+        }
+
+        // Unified tactile haptic trigger for buttons, triggers & UI
+        function haptic(type = 'click', forceMs = 0) {
+            initAudio();
+            if (CONFIG.hapticIntensity === 0) return;
+
+            let duration = forceMs || (CONFIG.hapticIntensity === 40 ? 65 : 40);
+            if (type === 'tick') {
+                duration = 35;
+                playHapticThump(120, 0.02, 0.2);
+            } else if (type === 'click') {
+                duration = 65;
+                playHapticThump(65, 0.04, 0.4);
+            } else if (type === 'heavy') {
+                duration = 140;
+                playHapticThump(45, 0.08, 0.7);
+            } else if (typeof type === 'number') {
+                duration = type;
+                playHapticThump(55, Math.min(0.08, duration / 1000), 0.4);
+            }
+
+            if ('vibrate' in navigator) {
+                try {
+                    const ok = navigator.vibrate(duration);
+                    updateDiagResult(ok, duration);
+                } catch (e) {
+                    updateDiagResult(false, duration, e.message);
+                }
+            } else {
+                updateDiagResult(false, duration, 'iOS does not support Web Vibration');
+            }
+        }
+
+        // In-Game Live Game Rumble Processor (Triggered automatically by PC Games!)
+        const hudRumblePill = document.getElementById('hudRumblePill');
+
+        function handleGameRumble(largeMotor, smallMotor) {
+            initAudio();
+            lastLargeMotor = largeMotor;
+            lastSmallMotor = smallMotor;
+
+            if (CONFIG.hapticIntensity === 0 || (largeMotor === 0 && smallMotor === 0)) {
+                stopGameRumble();
+                return;
+            }
+
+            const intensity = Math.max(largeMotor, smallMotor) / 255;
+
+            // Visual feedback & micro-shudder
+            document.body.classList.add('rumble-vibrating');
+            if (hudRumblePill) hudRumblePill.style.display = 'flex';
+
+            // Continuous mechanical vibration pulses
+            if (!isRumbleActive) {
+                isRumbleActive = true;
+                runRumbleLoop();
+            }
+
+            // Audio Haptic Continuous Drone (Voice-Coil HD Rumble)
+            if (audioCtx) {
+                try {
+                    if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+                    if (!rumbleOsc) {
+                        rumbleOsc = audioCtx.createOscillator();
+                        rumbleGain = audioCtx.createGain();
+                        rumbleOsc.type = 'triangle';
+                        rumbleOsc.frequency.setValueAtTime(45, audioCtx.currentTime);
+                        rumbleGain.gain.setValueAtTime(0.01, audioCtx.currentTime);
+                        rumbleOsc.connect(rumbleGain);
+                        rumbleGain.connect(audioCtx.destination);
+                        rumbleOsc.start();
+                    }
+
+                    // Large motor = 40Hz deep thump, small motor = 95Hz high buzz
+                    const freq = largeMotor >= smallMotor ? 38 + (largeMotor * 0.12) : 75 + (smallMotor * 0.25);
+                    rumbleOsc.frequency.setTargetAtTime(freq, audioCtx.currentTime, 0.03);
+                    const gainVal = Math.min(0.5, intensity * 0.45 * (CONFIG.hapticIntensity / 25));
+                    rumbleGain.gain.setTargetAtTime(gainVal, audioCtx.currentTime, 0.03);
+                } catch (e) {}
+            }
+        }
+
+        function runRumbleLoop() {
+            if (!isRumbleActive) return;
+
+            if (navigator.vibrate) {
+                try {
+                    if (lastLargeMotor > 100) {
+                        navigator.vibrate([70, 20]);
+                    } else if (lastSmallMotor > 0 && lastLargeMotor === 0) {
+                        navigator.vibrate([20, 25]);
+                    } else {
+                        navigator.vibrate([40, 20]);
+                    }
+                } catch (e) {}
+            }
+
+            if (rumbleInterval) clearTimeout(rumbleInterval);
+            rumbleInterval = setTimeout(() => {
+                if (isRumbleActive) runRumbleLoop();
+            }, 85);
+        }
+
+        function stopGameRumble() {
+            isRumbleActive = false;
+            if (rumbleInterval) {
+                clearTimeout(rumbleInterval);
+                rumbleInterval = null;
+            }
+            if (navigator.vibrate) {
+                try { navigator.vibrate(0); } catch (e) {}
+            }
+            if (rumbleGain && audioCtx) {
+                try {
+                    rumbleGain.gain.setTargetAtTime(0.0001, audioCtx.currentTime, 0.05);
+                } catch (e) {}
+            }
+            document.body.classList.remove('rumble-vibrating');
+            if (hudRumblePill) hudRumblePill.style.display = 'none';
+        }
+
+        // Unlock audio context on any user touch
+        window.addEventListener('touchstart', initAudio, { passive: true });
+        window.addEventListener('touchend', initAudio, { passive: true });
+        window.addEventListener('mousedown', initAudio, { passive: true });
+
+        // ==========================================
+        // CONSOLE-CATEGORIZED THEMES & COLORS ENGINE
+        // ==========================================
+        const CONSOLE_THEMES = {
+            ps5: {
+                name: 'PlayStation 5 Editions',
+                defaultTheme: 'ps5_glacier',
+                defaultAccent: '#38bdf8',
+                defaultAccentName: 'GLACIER BLUE',
+                themes: {
+                    ps5_glacier: {
+                        name: 'DUALSENSE GLACIER',
+                        bg: 'radial-gradient(circle at 50% 20%, #0c1c38 0%, #030712 100%)',
+                        accent: '#38bdf8',
+                        ambientLeft: '#00439c',
+                        ambientRight: '#38bdf8',
+                        preview: 'linear-gradient(135deg, #0c1c38, #38bdf8)'
+                    },
+                    ps5_cosmic: {
+                        name: 'COSMIC RED',
+                        bg: 'radial-gradient(circle at 50% 20%, #2b0b14 0%, #0c0205 100%)',
+                        accent: '#ff2a6d',
+                        ambientLeft: '#b91c1c',
+                        ambientRight: '#ff2a6d',
+                        preview: 'linear-gradient(135deg, #2b0b14, #ff2a6d)'
+                    },
+                    ps5_galactic: {
+                        name: 'GALACTIC PURPLE',
+                        bg: 'radial-gradient(circle at 50% 20%, #1e0b36 0%, #080212 100%)',
+                        accent: '#a855f7',
+                        ambientLeft: '#7e22ce',
+                        ambientRight: '#c084fc',
+                        preview: 'linear-gradient(135deg, #1e0b36, #a855f7)'
+                    },
+                    ps5_starlight: {
+                        name: 'STARLIGHT BLUE',
+                        bg: 'radial-gradient(circle at 50% 20%, #0a2540 0%, #020b14 100%)',
+                        accent: '#00d4ff',
+                        ambientLeft: '#0284c7',
+                        ambientRight: '#38bdf8',
+                        preview: 'linear-gradient(135deg, #0a2540, #00d4ff)'
+                    },
+                    ps5_nova: {
+                        name: 'NOVA PINK',
+                        bg: 'radial-gradient(circle at 50% 20%, #300a20 0%, #0d0208 100%)',
+                        accent: '#f43f5e',
+                        ambientLeft: '#e11d48',
+                        ambientRight: '#fb7185',
+                        preview: 'linear-gradient(135deg, #300a20, #f43f5e)'
+                    },
+                    ps5_retro: {
+                        name: '30TH RETRO GRAY',
+                        bg: 'radial-gradient(circle at 50% 20%, #22262d 0%, #0d0e12 100%)',
+                        accent: '#94a3b8',
+                        ambientLeft: '#475569',
+                        ambientRight: '#cbd5e1',
+                        preview: 'linear-gradient(135deg, #22262d, #cbd5e1)'
+                    }
+                },
+                colors: [
+                    { color: '#38bdf8', name: 'GLACIER BLUE' },
+                    { color: '#00439c', name: 'PS COBALT' },
+                    { color: '#a855f7', name: 'GALACTIC PURPLE' },
+                    { color: '#ff2a6d', name: 'COSMIC RED' },
+                    { color: '#f43f5e', name: 'NOVA PINK' },
+                    { color: '#f8fafc', name: 'DUALSENSE WHITE' }
+                ]
+            },
+            xbox: {
+                name: 'Xbox Series X/S Editions',
+                defaultTheme: 'xbox_velocity',
+                defaultAccent: '#00ff66',
+                defaultAccentName: 'VELOCITY GREEN',
+                themes: {
+                    xbox_velocity: {
+                        name: 'VELOCITY GREEN',
+                        bg: 'radial-gradient(circle at 50% 20%, #062810 0%, #020c05 100%)',
+                        accent: '#00ff66',
+                        ambientLeft: '#107c10',
+                        ambientRight: '#00ff66',
+                        preview: 'linear-gradient(135deg, #062810, #00ff66)'
+                    },
+                    xbox_shock: {
+                        name: 'SHOCK BLUE',
+                        bg: 'radial-gradient(circle at 50% 20%, #071e3d 0%, #020b18 100%)',
+                        accent: '#2563eb',
+                        ambientLeft: '#1d4ed8',
+                        ambientRight: '#60a5fa',
+                        preview: 'linear-gradient(135deg, #071e3d, #2563eb)'
+                    },
+                    xbox_pulse: {
+                        name: 'PULSE RED',
+                        bg: 'radial-gradient(circle at 50% 20%, #2b0b0b 0%, #0f0202 100%)',
+                        accent: '#ef4444',
+                        ambientLeft: '#b91c1c',
+                        ambientRight: '#f87171',
+                        preview: 'linear-gradient(135deg, #2b0b0b, #ef4444)'
+                    },
+                    xbox_emerald: {
+                        name: '20TH EMERALD',
+                        bg: 'radial-gradient(circle at 50% 20%, #042416 0%, #010d07 100%)',
+                        accent: '#10b981',
+                        ambientLeft: '#059669',
+                        ambientRight: '#34d399',
+                        preview: 'linear-gradient(135deg, #042416, #10b981)'
+                    },
+                    xbox_elite: {
+                        name: 'CARBON GOLD',
+                        bg: 'radial-gradient(circle at 50% 20%, #1f1b14 0%, #0a0907 100%)',
+                        accent: '#ffb703',
+                        ambientLeft: '#b45309',
+                        ambientRight: '#fbbf24',
+                        preview: 'linear-gradient(135deg, #1f1b14, #ffb703)'
+                    },
+                    xbox_cyber: {
+                        name: 'FORZA HORIZON',
+                        bg: 'radial-gradient(circle at 50% 20%, #1a1600 0%, #080700 100%)',
+                        accent: '#ffea00',
+                        ambientLeft: '#ca8a04',
+                        ambientRight: '#facc15',
+                        preview: 'linear-gradient(135deg, #1a1600, #ffea00)'
+                    }
+                },
+                colors: [
+                    { color: '#00ff66', name: 'VELOCITY GREEN' },
+                    { color: '#107c10', name: 'XBOX FOREST' },
+                    { color: '#2563eb', name: 'SHOCK BLUE' },
+                    { color: '#ef4444', name: 'PULSE RED' },
+                    { color: '#ffb703', name: 'CARBON GOLD' },
+                    { color: '#f8fafc', name: 'ROBOT WHITE' }
+                ]
+            },
+            fight: {
+                name: 'Arcade & Fighter Editions',
+                defaultTheme: 'fight_mishima',
+                defaultAccent: '#ffb703',
+                defaultAccentName: 'MISHIMA GOLD',
+                themes: {
+                    fight_mishima: {
+                        name: 'TEKKEN 8 GOLD',
+                        bg: 'radial-gradient(circle at 50% 20%, #261a00 0%, #0d0800 100%)',
+                        accent: '#ffb703',
+                        ambientLeft: '#b45309',
+                        ambientRight: '#fbbf24',
+                        preview: 'linear-gradient(135deg, #261a00, #ffb703)'
+                    },
+                    fight_sf6: {
+                        name: 'SF6 DRIVE IMPACT',
+                        bg: 'radial-gradient(circle at 50% 20%, #2b001a 0%, #0d0007 100%)',
+                        accent: '#ff0055',
+                        ambientLeft: '#ff0055',
+                        ambientRight: '#00d4ff',
+                        preview: 'linear-gradient(135deg, #ff0055, #00d4ff)'
+                    },
+                    fight_inferno: {
+                        name: 'NETHERREALM FIRE',
+                        bg: 'radial-gradient(circle at 50% 20%, #2f0d04 0%, #0f0300 100%)',
+                        accent: '#ff5400',
+                        ambientLeft: '#ea580c',
+                        ambientRight: '#fb923c',
+                        preview: 'linear-gradient(135deg, #2f0d04, #ff5400)'
+                    },
+                    fight_guilty: {
+                        name: 'ROCKER MAGENTA',
+                        bg: 'radial-gradient(circle at 50% 20%, #29082b 0%, #0d020d 100%)',
+                        accent: '#d946ef',
+                        ambientLeft: '#c026d3',
+                        ambientRight: '#e879f9',
+                        preview: 'linear-gradient(135deg, #29082b, #d946ef)'
+                    },
+                    fight_sanwa: {
+                        name: 'SANWA ARCADE CAB',
+                        bg: 'radial-gradient(circle at 50% 20%, #1f2229 0%, #0a0b0e 100%)',
+                        accent: '#ef4444',
+                        ambientLeft: '#ef4444',
+                        ambientRight: '#3b82f6',
+                        preview: 'linear-gradient(135deg, #1f2229, #ef4444)'
+                    },
+                    fight_noir: {
+                        name: 'TOURNAMENT NOIR',
+                        bg: '#050508',
+                        accent: '#f8fafc',
+                        ambientLeft: '#1e293b',
+                        ambientRight: '#475569',
+                        preview: 'linear-gradient(135deg, #050508, #64748b)'
+                    }
+                },
+                colors: [
+                    { color: '#ffb703', name: 'MISHIMA GOLD' },
+                    { color: '#ff0055', name: 'DRIVE CRIMSON' },
+                    { color: '#ff5400', name: 'INFERNO ORANGE' },
+                    { color: '#d946ef', name: 'ROCKER MAGENTA' },
+                    { color: '#00d4ff', name: 'IMPACT CYAN' },
+                    { color: '#f8fafc', name: 'CABINET WHITE' }
+                ]
+            }
+        };
+
+        const profileBadge = document.getElementById('profileBadge');
+        const lblQuickMode = document.getElementById('lblQuickMode');
+        const ambientLeft = document.getElementById('ambientLeft');
+        const ambientRight = document.getElementById('ambientRight');
+        const lblThemeName = document.getElementById('lblThemeName');
+        const lblAccentColor = document.getElementById('lblAccentColor');
+        const themeCardsContainer = document.getElementById('themeCardsContainer');
+        const colorSwatchesContainer = document.getElementById('colorSwatchesContainer');
+
+        let currentActiveThemeKey = '';
+        let currentActiveAccent = '';
+        let currentCategoryView = 'ps5';
+
+        // Find theme object in specified category or across all categories
+        function getThemeDef(themeKey, catHint = currentCategoryView) {
+            if (CONSOLE_THEMES[catHint] && CONSOLE_THEMES[catHint].themes[themeKey]) {
+                return { theme: CONSOLE_THEMES[catHint].themes[themeKey], cat: catHint };
+            }
+            for (const cKey of Object.keys(CONSOLE_THEMES)) {
+                if (CONSOLE_THEMES[cKey].themes[themeKey]) {
+                    return { theme: CONSOLE_THEMES[cKey].themes[themeKey], cat: cKey };
+                }
+            }
+            // Fallback
+            return { theme: CONSOLE_THEMES.ps5.themes.ps5_glacier, cat: 'ps5' };
+        }
+
+        // Apply visual theme to the web controller
+        function applyTheme(themeKey, catKey = currentCategoryView, skipSave = false) {
+            const { theme, cat } = getThemeDef(themeKey, catKey);
+            currentActiveThemeKey = themeKey;
+
+            document.body.style.background = theme.bg;
+            ambientLeft.style.background = theme.ambientLeft;
+            ambientRight.style.background = theme.ambientRight;
+
+            if (lblThemeName) lblThemeName.innerText = theme.name;
+
+            // Highlight active card in the current drawer view
+            document.querySelectorAll('.theme-card').forEach(card => {
+                if (card.dataset.theme === themeKey) card.classList.add('active');
+                else card.classList.remove('active');
+            });
+
+            // Use saved custom accent if available, otherwise apply theme default accent
+            const savedAccent = localStorage.getItem('vibe_accent_' + cat);
+            const savedAccentName = localStorage.getItem('vibe_accent_name_' + cat);
+            if (savedAccent && savedAccentName) {
+                applyAccentColor(savedAccent, savedAccentName, cat, true);
+            } else {
+                applyAccentColor(theme.accent, theme.name.split(' ')[0] + ' ACCENT', cat, true);
+            }
+
+            if (!skipSave) {
+                localStorage.setItem('vibe_theme_' + cat, themeKey);
+                localStorage.setItem('vibe_active_theme', themeKey);
+            }
+            haptic(25);
+        }
+
+        // Apply accent color & glowing highlights
+        function applyAccentColor(hexColor, name, catKey = currentCategoryView, skipSave = false) {
+            currentActiveAccent = hexColor;
+            document.documentElement.style.setProperty('--accent-cyan', hexColor);
+            document.documentElement.style.setProperty('--active-glow', hexColor + '66');
+
+            if (lblAccentColor) lblAccentColor.innerText = name;
+
+            document.querySelectorAll('.color-swatch').forEach(swatch => {
+                if (swatch.dataset.color.toLowerCase() === hexColor.toLowerCase()) {
+                    swatch.classList.add('active');
+                } else {
+                    swatch.classList.remove('active');
+                }
+            });
+
+            if (!skipSave) {
+                localStorage.setItem('vibe_accent_' + catKey, hexColor);
+                localStorage.setItem('vibe_accent_name_' + catKey, name);
+            }
+            haptic(20);
+        }
+
+        // Render theme cards & color swatches for a console category
+        function renderConsoleThemes(catKey) {
+            if (!CONSOLE_THEMES[catKey]) return;
+            currentCategoryView = catKey;
+
+            // Update category tab styling in settings drawer
+            document.querySelectorAll('.theme-tab-btn').forEach(btn => {
+                if (btn.dataset.cat === catKey) btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+
+            // Render Theme Cards
+            if (themeCardsContainer) {
+                themeCardsContainer.innerHTML = '';
+                const themesObj = CONSOLE_THEMES[catKey].themes;
+                for (const [tKey, tDef] of Object.entries(themesObj)) {
+                    const card = document.createElement('div');
+                    card.className = 'theme-card' + (tKey === currentActiveThemeKey ? ' active' : '');
+                    card.dataset.theme = tKey;
+                    card.dataset.cat = catKey;
+
+                    const preview = document.createElement('div');
+                    preview.className = 'theme-preview';
+                    preview.style.background = tDef.preview || tDef.bg;
+
+                    const label = document.createElement('span');
+                    label.innerText = tDef.name;
+
+                    card.appendChild(preview);
+                    card.appendChild(label);
+
+                    card.addEventListener('click', () => {
+                        applyTheme(tKey, catKey);
+                    });
+
+                    themeCardsContainer.appendChild(card);
+                }
+            }
+
+            // Render Color Swatches
+            if (colorSwatchesContainer) {
+                colorSwatchesContainer.innerHTML = '';
+                const colorsArr = CONSOLE_THEMES[catKey].colors;
+                colorsArr.forEach(c => {
+                    const swatch = document.createElement('div');
+                    const isActive = (currentActiveAccent.toLowerCase() === c.color.toLowerCase());
+                    swatch.className = 'color-swatch' + (isActive ? ' active' : '');
+                    swatch.style.background = c.color;
+                    swatch.style.color = c.color;
+                    swatch.dataset.color = c.color;
+                    swatch.dataset.name = c.name;
+                    swatch.title = c.name;
+
+                    swatch.addEventListener('click', () => {
+                        applyAccentColor(c.color, c.name, catKey);
+                    });
+
+                    colorSwatchesContainer.appendChild(swatch);
+                });
+            }
+        }
+
+        // Automatic Theme Switcher when Console Profile Changes
+        function autoSwitchConsoleTheme(consoleProfile) {
+            const catKey = (consoleProfile === 'xbox' || consoleProfile === 'fight') ? consoleProfile : 'ps5';
+            const catConfig = CONSOLE_THEMES[catKey];
+
+            // Determine theme: user's saved theme for this console, or console default
+            const targetThemeKey = localStorage.getItem('vibe_theme_' + catKey) || catConfig.defaultTheme;
+
+            // Render UI for this console category
+            renderConsoleThemes(catKey);
+
+            // Apply the theme and colors
+            applyTheme(targetThemeKey, catKey, true);
+        }
+
+        // Wire category tab click handlers in Settings drawer
+        document.querySelectorAll('.theme-tab-btn').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const cat = tab.dataset.cat;
+                if (cat) {
+                    renderConsoleThemes(cat);
+                    haptic(20);
+                }
+            });
+        });
+
+        // ==========================================
+        // PROFILE ENGINE (PS5 / XBOX / FIGHTING)
+        // ==========================================
+        function setProfile(profile) {
+            CONFIG.profile = profile;
+            document.body.classList.remove('theme-ps', 'theme-xbox', 'mode-fighting');
+
+            const optPs5 = document.getElementById('optPs5');
+            const optXbox = document.getElementById('optXbox');
+            const optFight = document.getElementById('optFight');
+            optPs5.classList.remove('active');
+            optXbox.classList.remove('active');
+            optFight.classList.remove('active');
+
+            const dpad = document.getElementById('dpadContainer');
+            const leftStick = document.getElementById('leftStickContainer');
+            const rightStick = document.getElementById('rightStickContainer');
+
+            // Reset stick positions classes
+            dpad.classList.remove('pos-ps5-dpad', 'pos-xbox-dpad');
+            leftStick.classList.remove('pos-ps5-stick-left', 'pos-xbox-stick-left');
+            rightStick.classList.remove('pos-ps5-stick-right', 'pos-xbox-stick-right');
+
+            const btnHome = document.getElementById('btnHome');
+            const leftThumb = document.getElementById('leftThumb');
+            const rightThumb = document.getElementById('rightThumb');
+
+            if (profile === 'ps5') {
+                document.body.classList.add('theme-ps');
+                optPs5.classList.add('active');
+                profileBadge.className = 'profile-pill profile-ps5';
+                profileBadge.innerText = 'PS5 DUALSENSE';
+                lblQuickMode.innerText = 'XBOX';
+
+                // Symmetric Stick Layout
+                dpad.classList.add('pos-ps5-dpad');
+                leftStick.classList.add('pos-ps5-stick-left');
+                rightStick.classList.add('pos-ps5-stick-right');
+
+                // Buttons
+                document.getElementById('btnActionTop').innerText = '△';
+                document.getElementById('btnActionLeft').innerText = '▢';
+                document.getElementById('btnActionRight').innerText = '○';
+                document.getElementById('btnActionBottom').innerText = '✕';
+
+                // Shoulders
+                document.getElementById('lblL1').innerText = 'L1';
+                document.getElementById('lblL2').innerText = 'L2';
+                document.getElementById('lblR1').innerText = 'R1';
+                document.getElementById('lblR2').innerText = 'R2';
+
+                // Center
+                document.getElementById('btnShare').innerText = 'CREATE';
+                document.getElementById('btnOptions').innerText = 'OPTIONS';
+                btnHome.innerText = 'PS';
+                btnHome.classList.remove('xbox-nexus');
+                leftThumb.classList.remove('xbox-thumb');
+                rightThumb.classList.remove('xbox-thumb');
+
+            } else if (profile === 'xbox') {
+                document.body.classList.add('theme-xbox');
+                optXbox.classList.add('active');
+                profileBadge.className = 'profile-pill profile-xbox';
+                profileBadge.innerText = 'XBOX SERIES X';
+                lblQuickMode.innerText = 'FIGHT';
+
+                // Authentic Asymmetric Sticks!
+                dpad.classList.add('pos-xbox-dpad');
+                leftStick.classList.add('pos-xbox-stick-left');
+                rightStick.classList.add('pos-ps5-stick-right');
+
+                // Buttons (Y, X, B, A)
+                document.getElementById('btnActionTop').innerText = 'Y';
+                document.getElementById('btnActionLeft').innerText = 'X';
+                document.getElementById('btnActionRight').innerText = 'B';
+                document.getElementById('btnActionBottom').innerText = 'A';
+
+                // Shoulders (LB, LT, RB, RT)
+                document.getElementById('lblL1').innerText = 'LB';
+                document.getElementById('lblL2').innerText = 'LT';
+                document.getElementById('lblR1').innerText = 'RB';
+                document.getElementById('lblR2').innerText = 'RT';
+
+                // Center (View ⧉, Nexus ⨂, Menu ☰)
+                document.getElementById('btnShare').innerText = 'VIEW';
+                document.getElementById('btnOptions').innerText = 'MENU';
+                btnHome.innerText = 'XBOX';
+                btnHome.classList.add('xbox-nexus');
+                leftThumb.classList.add('xbox-thumb');
+                rightThumb.classList.add('xbox-thumb');
+
+            } else if (profile === 'fight') {
+                document.body.classList.add('mode-fighting');
+                optFight.classList.add('active');
+                profileBadge.className = 'profile-pill profile-fight';
+                profileBadge.innerText = 'ARCADE FIGHTSTICK';
+                lblQuickMode.innerText = 'PS5';
+            }
+
+            // AUTOMATIC THEME SWITCH FOR THIS PARTICULAR CONSOLE!
+            autoSwitchConsoleTheme(profile);
+
+            // DYNAMIC BACKGROUND GRAPHICS ADAPTATION
+            if (typeof updateHoloProfile === 'function') updateHoloProfile(profile);
+            if (typeof updateFloatingGlyphs === 'function') updateFloatingGlyphs(profile);
+
+            localStorage.setItem('vibe_controller_profile', profile);
+            if (typeof loadSavedLayout === 'function') loadSavedLayout();
+            haptic(30);
+        }
+
+        // Quick Mode Cycler in Center HUD
+        document.getElementById('btnQuickMode').addEventListener('click', () => {
+            if (CONFIG.profile === 'ps5') setProfile('xbox');
+            else if (CONFIG.profile === 'xbox') setProfile('fight');
+            else setProfile('ps5');
+        });
+
+        // Drawer profile clicks
+        document.getElementById('optPs5').addEventListener('click', () => setProfile('ps5'));
+        document.getElementById('optXbox').addEventListener('click', () => setProfile('xbox'));
+        document.getElementById('optFight').addEventListener('click', () => setProfile('fight'));
+
+        // Load saved profile (and trigger automatic console theme setup)
+        const savedProfile = localStorage.getItem('vibe_controller_profile') || 'ps5';
+        setProfile(savedProfile);
+
+        // ==========================================
+        // WEBSOCKET BINARY PROTOCOL ENGINE
+        // ==========================================
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+
+        function connectWebSocket() {
+            const host = window.location.host || '127.0.0.1:8080';
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${protocol}//${host}/ws`);
+            ws.binaryType = 'arraybuffer';
+
+            ws.onopen = () => {
+                statusDot.classList.add('online');
+                statusText.innerText = 'Online (60FPS)';
+            };
+
+            ws.onmessage = (event) => {
+                if (event.data instanceof ArrayBuffer) {
+                    const view = new DataView(event.data);
+                    if (view.byteLength >= 4 && view.getUint8(0) === 0xFE) {
+                        const largeMotor = view.getUint8(1);
+                        const smallMotor = view.getUint8(2);
+                        const slot = view.getUint8(3);
+                        if (slot === CONFIG.slot || slot === 0) {
+                            handleGameRumble(largeMotor, smallMotor);
+                        }
+                    }
+                }
+            };
+
+            ws.onclose = () => {
+                statusDot.classList.remove('online');
+                statusText.innerText = 'Reconnecting...';
+                stopGameRumble();
+                setTimeout(connectWebSocket, 1000);
+            };
+
+            ws.onerror = () => ws.close();
+        }
+        connectWebSocket();
+
+        function sendInputReport() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) return;
+
+            const buffer = new ArrayBuffer(11);
+            const view = new DataView(buffer);
+
+            // Left Stick X/Y (0..255, center 128)
+            view.setUint8(0, Math.max(0, Math.min(255, Math.round((inputState.lx * 127) + 128))));
+            view.setUint8(1, Math.max(0, Math.min(255, Math.round((inputState.ly * 127) + 128))));
+
+            // Right Stick X/Y (0..255, center 128)
+            view.setUint8(2, Math.max(0, Math.min(255, Math.round((inputState.rx * 127) + 128))));
+            view.setUint8(3, Math.max(0, Math.min(255, Math.round((inputState.ry * 127) + 128))));
+
+            // Triggers L2 / R2 (0..255)
+            view.setUint8(4, inputState.l2);
+            view.setUint8(5, inputState.r2);
+
+            // 32-bit buttons mask
+            view.setUint16(6, inputState.buttons & 0xFFFF, true);
+            view.setUint16(8, (inputState.buttons >> 16) & 0xFFFF, true);
+
+            // Player Slot (1 or 2)
+            view.setUint8(10, inputState.slot || 1);
+
+            ws.send(buffer);
+        }
+
+        // ==========================================
+        // BUTTON TOUCH HANDLERS (ALL BUTTONS & MODES)
+        // ==========================================
+        const fillL2 = document.getElementById('fillL2');
+        const fillR2 = document.getElementById('fillR2');
+
+        function bindButtonEvents(el, mask, trigger) {
+            const handleDown = (e) => {
+                if (isEditMode) return;
+                e.preventDefault();
+                el.classList.add('active');
+                if (mask) inputState.buttons |= mask;
+                if (trigger === 'l2') {
+                    inputState.l2 = 255;
+                    if (fillL2) fillL2.style.height = '100%';
+                    haptic('heavy');
+                } else if (trigger === 'r2') {
+                    inputState.r2 = 255;
+                    if (fillR2) fillR2.style.height = '100%';
+                    haptic('heavy');
+                } else {
+                    haptic('click');
+                }
+                sendInputReport();
+            };
+
+            const handleUp = (e) => {
+                if (isEditMode) return;
+                e.preventDefault();
+                el.classList.remove('active');
+                if (mask) inputState.buttons &= ~mask;
+                if (trigger === 'l2') {
+                    inputState.l2 = 0;
+                    if (fillL2) fillL2.style.height = '0%';
+                }
+                if (trigger === 'r2') {
+                    inputState.r2 = 0;
+                    if (fillR2) fillR2.style.height = '0%';
+                }
+                sendInputReport();
+            };
+
+            el.addEventListener('touchstart', handleDown, { passive: false });
+            el.addEventListener('touchend', handleUp, { passive: false });
+            el.addEventListener('touchcancel', handleUp, { passive: false });
+            el.addEventListener('mousedown', handleDown);
+            el.addEventListener('mouseup', handleUp);
+            el.addEventListener('mouseleave', handleUp);
+        }
+
+        document.querySelectorAll('[data-mask], [data-trigger]').forEach(btn => {
+            const mask = parseInt(btn.dataset.mask || '0', 10);
+            const trigger = btn.dataset.trigger;
+            bindButtonEvents(btn, mask, trigger);
+        });
+
+        // Fighting Game Combo Macros (Throw, Parry, Heat/Drive Impact)
+        document.querySelectorAll('[data-macro]').forEach(btn => {
+            const macroType = btn.dataset.macro;
+            const handleMacroDown = (e) => {
+                e.preventDefault();
+                btn.classList.add('active');
+                if (macroType === 'throw') {
+                    // Throw = LP (4) + LK (1)
+                    inputState.buttons |= (4 | 1);
+                } else if (macroType === 'parry') {
+                    // Parry = MP (8) + MK (2)
+                    inputState.buttons |= (8 | 2);
+                } else if (macroType === 'impact') {
+                    // Drive Impact / Heat = HP (32) + HK (R2 255)
+                    inputState.buttons |= 32;
+                    inputState.r2 = 255;
+                }
+                haptic(35);
+                sendInputReport();
+            };
+
+            const handleMacroUp = (e) => {
+                e.preventDefault();
+                btn.classList.remove('active');
+                if (macroType === 'throw') inputState.buttons &= ~(4 | 1);
+                else if (macroType === 'parry') inputState.buttons &= ~(8 | 2);
+                else if (macroType === 'impact') {
+                    inputState.buttons &= ~32;
+                    inputState.r2 = 0;
+                }
+                sendInputReport();
+            };
+
+            btn.addEventListener('touchstart', handleMacroDown, { passive: false });
+            btn.addEventListener('touchend', handleMacroUp, { passive: false });
+            btn.addEventListener('touchcancel', handleMacroUp, { passive: false });
+        });
+
+        // ==========================================
+        // TOUCHPAD POV CAMERA SWIPE LOOK
+        // ==========================================
+        const touchpad = document.getElementById('psTouchpad');
+        let touchSwipeId = null;
+        let lastTouchX = 0, lastTouchY = 0;
+
+        touchpad.addEventListener('touchstart', (e) => {
+            if (isEditMode) return;
+            const touch = e.changedTouches[0];
+            touchSwipeId = touch.identifier;
+            lastTouchX = touch.clientX;
+            lastTouchY = touch.clientY;
+            touchpad.classList.add('active');
+            inputState.buttons |= 2048; // Touchpad click
+            haptic(15);
+            sendInputReport();
+        }, { passive: false });
+
+        window.addEventListener('touchmove', (e) => {
+            if (touchSwipeId === null) return;
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const t = e.changedTouches[i];
+                if (t.identifier === touchSwipeId) {
+                    const dx = (t.clientX - lastTouchX) * 0.035 * CONFIG.gyroSens;
+                    const dy = (t.clientY - lastTouchY) * 0.035 * CONFIG.gyroSens;
+                    lastTouchX = t.clientX;
+                    lastTouchY = t.clientY;
+
+                    // Camera POV Look mapped to Right Stick
+                    inputState.rx = Math.max(-1, Math.min(1, inputState.rx + dx));
+                    inputState.ry = Math.max(-1, Math.min(1, inputState.ry + (CONFIG.invertY ? -dy : dy)));
+                    sendInputReport();
+                    break;
+                }
+            }
+        }, { passive: false });
+
+        const endTouchpad = (e) => {
+            if (touchSwipeId === null) return;
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                if (e.changedTouches[i].identifier === touchSwipeId) {
+                    touchSwipeId = null;
+                    touchpad.classList.remove('active');
+                    inputState.buttons &= ~2048;
+                    // Ease right stick back
+                    inputState.rx = 0;
+                    inputState.ry = 0;
+                    sendInputReport();
+                    break;
+                }
+            }
+        };
+        window.addEventListener('touchend', endTouchpad);
+        window.addEventListener('touchcancel', endTouchpad);
+
+        // ==========================================
+        // VIRTUAL ANALOG STICKS (LEFT & RIGHT)
+        // ==========================================
+        function setupStick(containerId, thumbId, isLeft) {
+            const container = document.getElementById(containerId);
+            const thumb = document.getElementById(thumbId);
+            const maxRadius = 36;
+            let touchId = null;
+
+            function processTouch(clientX, clientY) {
+                const rect = container.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+
+                let dx = clientX - centerX;
+                let dy = clientY - centerY;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist > maxRadius) {
+                    dx = (dx / dist) * maxRadius;
+                    dy = (dy / dist) * maxRadius;
+                }
+
+                thumb.style.transform = `translate(${dx}px, ${dy}px)`;
+
+                let normX = (dx / maxRadius) * CONFIG.stickSens;
+                let normY = (dy / maxRadius) * CONFIG.stickSens;
+
+                if (Math.abs(normX) < CONFIG.deadzone) normX = 0;
+                if (Math.abs(normY) < CONFIG.deadzone) normY = 0;
+
+                if (isLeft) {
+                    inputState.lx = Math.max(-1, Math.min(1, normX));
+                    inputState.ly = Math.max(-1, Math.min(1, normY));
+                } else {
+                    inputState.rx = Math.max(-1, Math.min(1, normX));
+                    inputState.ry = Math.max(-1, Math.min(1, normY));
+                }
+                sendInputReport();
+            }
+
+            container.addEventListener('touchstart', (e) => {
+                if (isEditMode) return;
+                e.preventDefault();
+                const touch = e.changedTouches[0];
+                touchId = touch.identifier;
+                processTouch(touch.clientX, touch.clientY);
+                haptic(15);
+            }, { passive: false });
+
+            window.addEventListener('touchmove', (e) => {
+                if (isEditMode || touchId === null) return;
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    if (e.changedTouches[i].identifier === touchId) {
+                        processTouch(e.changedTouches[i].clientX, e.changedTouches[i].clientY);
+                        break;
+                    }
+                }
+            }, { passive: false });
+
+            const resetStick = (e) => {
+                if (touchId === null) return;
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    if (e.changedTouches[i].identifier === touchId) {
+                        touchId = null;
+                        thumb.style.transform = 'translate(0px, 0px)';
+                        if (isLeft) { inputState.lx = 0; inputState.ly = 0; }
+                        else if (!CONFIG.gyroEnabled) { inputState.rx = 0; inputState.ry = 0; }
+                        sendInputReport();
+                        break;
+                    }
+                }
+            };
+
+            window.addEventListener('touchend', resetStick);
+            window.addEventListener('touchcancel', resetStick);
+        }
+
+        setupStick('leftStickContainer', 'leftThumb', true);
+        setupStick('rightStickContainer', 'rightThumb', false);
+
+        // ==========================================
+        // SANWA ARCADE FIGHTSTICK CONTROLLER
+        // ==========================================
+        function setupFightStick(containerId, ballId) {
+            const container = document.getElementById(containerId);
+            const ball = document.getElementById(ballId);
+            if (!container || !ball) return;
+
+            const maxRadius = 44;
+            let touchId = null;
+
+            function processFightStickTouch(clientX, clientY) {
+                const rect = container.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+
+                let dx = clientX - centerX;
+                let dy = clientY - centerY;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist > maxRadius) {
+                    dx = (dx / dist) * maxRadius;
+                    dy = (dy / dist) * maxRadius;
+                }
+
+                ball.style.transform = `translate(${dx}px, ${dy}px)`;
+
+                let normX = dx / maxRadius;
+                let normY = dy / maxRadius;
+
+                // Deadzone check
+                if (Math.abs(normX) < 0.08) normX = 0;
+                if (Math.abs(normY) < 0.08) normY = 0;
+
+                inputState.lx = Math.max(-1, Math.min(1, normX));
+                inputState.ly = Math.max(-1, Math.min(1, normY));
+
+                // Dual D-Pad Mapping for 100% Fighting Game Special Moves (Quarter-circles, DP, etc.)
+                const dpadThreshold = 0.35;
+                inputState.buttons &= ~(4096 | 8192 | 16384 | 32768);
+                if (normY < -dpadThreshold) inputState.buttons |= 4096; // Up
+                if (normY > dpadThreshold) inputState.buttons |= 8192;  // Down
+                if (normX < -dpadThreshold) inputState.buttons |= 16384; // Left
+                if (normX > dpadThreshold) inputState.buttons |= 32768; // Right
+
+                sendInputReport();
+            }
+
+            container.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                const touch = e.changedTouches[0];
+                touchId = touch.identifier;
+                processFightStickTouch(touch.clientX, touch.clientY);
+                haptic(15);
+            }, { passive: false });
+
+            window.addEventListener('touchmove', (e) => {
+                if (touchId === null) return;
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    if (e.changedTouches[i].identifier === touchId) {
+                        processFightStickTouch(e.changedTouches[i].clientX, e.changedTouches[i].clientY);
+                        break;
+                    }
+                }
+            }, { passive: false });
+
+            const resetFightStick = (e) => {
+                if (touchId === null) return;
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    if (e.changedTouches[i].identifier === touchId) {
+                        touchId = null;
+                        ball.style.transform = 'translate(0px, 0px)';
+                        inputState.lx = 0;
+                        inputState.ly = 0;
+                        inputState.buttons &= ~(4096 | 8192 | 16384 | 32768);
+                        sendInputReport();
+                        break;
+                    }
+                }
+            };
+
+            window.addEventListener('touchend', resetFightStick);
+            window.addEventListener('touchcancel', resetFightStick);
+        }
+
+        setupFightStick('fightStickContainer', 'fightStickBall');
+
+        // Toggle between Arcade Joystick and Hitbox Leverless
+        const btnFightJoystickTab = document.getElementById('btnFightJoystickTab');
+        const btnFightHitboxTab = document.getElementById('btnFightHitboxTab');
+        const fightJoystickView = document.getElementById('fightJoystickView');
+        const fightLeverless = document.getElementById('fightLeverless');
+
+        function setFightInputMode(mode) {
+            if (mode === 'hitbox') {
+                btnFightJoystickTab.classList.remove('active');
+                btnFightHitboxTab.classList.add('active');
+                fightJoystickView.style.display = 'none';
+                fightLeverless.style.display = 'block';
+            } else {
+                btnFightJoystickTab.classList.add('active');
+                btnFightHitboxTab.classList.remove('active');
+                fightJoystickView.style.display = 'block';
+                fightLeverless.style.display = 'none';
+            }
+            localStorage.setItem('vibe_fight_mode', mode);
+            haptic(20);
+        }
+
+        btnFightJoystickTab.addEventListener('click', () => setFightInputMode('joystick'));
+        btnFightHitboxTab.addEventListener('click', () => setFightInputMode('hitbox'));
+
+        // Default to Joystick mode on launch
+        const savedFightMode = localStorage.getItem('vibe_fight_mode') || 'joystick';
+        setFightInputMode(savedFightMode);
+
+        // ==========================================
+        // POV & GYROSCOPE MOTION AIMING ENGINE
+        // ==========================================
+        const btnGyroToggle = document.getElementById('btnGyroToggle');
+        const valGyroStatus = document.getElementById('valGyroStatus');
+        const trackGyro = document.getElementById('trackGyro');
+        const povDot = document.getElementById('povDot');
+
+        function toggleGyro(forceState) {
+            CONFIG.gyroEnabled = forceState !== undefined ? forceState : !CONFIG.gyroEnabled;
+
+            if (CONFIG.gyroEnabled) {
+                // Request Motion Permission on iOS if available
+                if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                    DeviceOrientationEvent.requestPermission().catch(() => {});
+                }
+
+                document.body.classList.add('pov-active');
+                btnGyroToggle.classList.add('btn-profile-active');
+                trackGyro.classList.add('checked');
+                valGyroStatus.innerText = 'ON';
+                valGyroStatus.style.color = 'var(--accent-emerald)';
+                window.addEventListener('deviceorientation', handleOrientation);
+                haptic(40);
+            } else {
+                document.body.classList.remove('pov-active');
+                btnGyroToggle.classList.remove('btn-profile-active');
+                trackGyro.classList.remove('checked');
+                valGyroStatus.innerText = 'OFF';
+                valGyroStatus.style.color = 'var(--accent-cyan)';
+                window.removeEventListener('deviceorientation', handleOrientation);
+                inputState.rx = 0;
+                inputState.ry = 0;
+                sendInputReport();
+                haptic(25);
+            }
+        }
+
+        btnGyroToggle.addEventListener('click', () => toggleGyro());
+        document.getElementById('toggleGyroSwitch').addEventListener('click', () => toggleGyro());
+
+        // Calibrate Center Orientation
+        document.getElementById('btnCalibrateGyro').addEventListener('click', () => {
+            CONFIG.gyroCenterBeta = currentBeta;
+            CONFIG.gyroCenterGamma = currentGamma;
+            haptic(50);
+            alert('🎯 Gyroscope POV Center Calibrated!');
+        });
+
+        let currentBeta = 0, currentGamma = 0;
+        function handleOrientation(e) {
+            if (!CONFIG.gyroEnabled) return;
+
+            const beta = e.beta || 0;   // Up/Down tilt (-180 to 180)
+            const gamma = e.gamma || 0; // Left/Right tilt (-90 to 90)
+
+            if (CONFIG.gyroCenterBeta === 0 && CONFIG.gyroCenterGamma === 0) {
+                CONFIG.gyroCenterBeta = beta;
+                CONFIG.gyroCenterGamma = gamma;
+            }
+
+            currentBeta = beta;
+            currentGamma = gamma;
+
+            const deltaX = (gamma - CONFIG.gyroCenterGamma) * 0.05 * CONFIG.gyroSens;
+            const deltaY = (beta - CONFIG.gyroCenterBeta) * 0.05 * CONFIG.gyroSens;
+
+            const rx = Math.max(-1, Math.min(1, deltaX));
+            const ry = Math.max(-1, Math.min(1, CONFIG.invertY ? -deltaY : deltaY));
+
+            inputState.rx = Math.abs(rx) < 0.04 ? 0 : rx;
+            inputState.ry = Math.abs(ry) < 0.04 ? 0 : ry;
+
+            // Update Crosshair Dot HUD
+            povDot.style.transform = `translate(${rx * 25}px, ${ry * 15}px)`;
+
+            sendInputReport();
+        }
+
+        // ==========================================
+        // SETTINGS DRAWER & TUNING CONTROLS
+        // ==========================================
+        const settingsDrawer = document.getElementById('settingsDrawer');
+        const btnSettings = document.getElementById('btnSettings');
+        const btnCloseDrawer = document.getElementById('btnCloseDrawer');
+
+        btnSettings.addEventListener('click', () => {
+            settingsDrawer.classList.add('open');
+            haptic(20);
+        });
+
+        btnCloseDrawer.addEventListener('click', () => {
+            settingsDrawer.classList.remove('open');
+            haptic(20);
+        });
+
+        // Invert Y Toggle
+        const toggleInvertY = document.getElementById('toggleInvertY');
+        const trackInvertY = document.getElementById('trackInvertY');
+        toggleInvertY.addEventListener('click', () => {
+            CONFIG.invertY = !CONFIG.invertY;
+            if (CONFIG.invertY) trackInvertY.classList.add('checked');
+            else trackInvertY.classList.remove('checked');
+            if (typeof ProfileManager !== 'undefined') ProfileManager.autoSync();
+            haptic(20);
+        });
+
+        // Sliders
+        const sliderGyroSens = document.getElementById('sliderGyroSens');
+        const lblGyroSens = document.getElementById('lblGyroSens');
+        sliderGyroSens.addEventListener('input', (e) => {
+            CONFIG.gyroSens = parseFloat(e.target.value);
+            lblGyroSens.innerText = `${CONFIG.gyroSens.toFixed(1)}x`;
+            if (typeof ProfileManager !== 'undefined') ProfileManager.autoSync();
+        });
+
+        const sliderDeadzone = document.getElementById('sliderDeadzone');
+        const lblDeadzone = document.getElementById('lblDeadzone');
+        sliderDeadzone.addEventListener('input', (e) => {
+            CONFIG.deadzone = parseInt(e.target.value, 10) / 100;
+            lblDeadzone.innerText = `${e.target.value}%`;
+            if (typeof ProfileManager !== 'undefined') ProfileManager.autoSync();
+        });
+
+        const sliderStickSens = document.getElementById('sliderStickSens');
+        const lblStickSens = document.getElementById('lblStickSens');
+        sliderStickSens.addEventListener('input', (e) => {
+            CONFIG.stickSens = parseInt(e.target.value, 10) / 100;
+            lblStickSens.innerText = `${e.target.value}%`;
+            if (typeof ProfileManager !== 'undefined') ProfileManager.autoSync();
+        });
+
+        // Haptic Tuning & Live Test Rumble
+        const hapticOff = document.getElementById('hapticOff');
+        const hapticMed = document.getElementById('hapticMed');
+        const hapticHigh = document.getElementById('hapticHigh');
+        const lblHapticLevel = document.getElementById('lblHapticLevel');
+        const btnTestRumble = document.getElementById('btnTestRumble');
+
+        function setHaptic(val, el, skipHaptic = false) {
+            CONFIG.hapticIntensity = val;
+            [hapticOff, hapticMed, hapticHigh].forEach(b => b.classList.remove('active'));
+            if (el) el.classList.add('active');
+
+            if (lblHapticLevel) {
+                if (val === 0) lblHapticLevel.innerText = 'OFF';
+                else if (val === 20) lblHapticLevel.innerText = 'MEDIUM';
+                else lblHapticLevel.innerText = '⚡ DUALSENSE HD';
+            }
+
+            localStorage.setItem('vibe_haptic_level', val);
+            if (typeof ProfileManager !== 'undefined') ProfileManager.autoSync();
+            if (!skipHaptic) {
+                if (val === 0) {
+                    stopGameRumble();
+                } else if (val === 20) {
+                    haptic('click');
+                } else {
+                    haptic('heavy');
+                }
+            }
+        }
+
+        hapticOff.addEventListener('click', () => setHaptic(0, hapticOff));
+        hapticMed.addEventListener('click', () => setHaptic(20, hapticMed));
+        hapticHigh.addEventListener('click', () => setHaptic(40, hapticHigh));
+
+        // Load saved haptic setting or default to Strong (DualSense HD)
+        const savedHaptic = localStorage.getItem('vibe_haptic_level');
+        if (savedHaptic !== null) {
+            const hVal = parseInt(savedHaptic, 10);
+            if (hVal === 0) setHaptic(0, hapticOff, true);
+            else if (hVal === 20) setHaptic(20, hapticMed, true);
+            else setHaptic(40, hapticHigh, true);
+        } else {
+            setHaptic(40, hapticHigh, true);
+        }
+
+        // Direct Vibration Test (1-Touch Synchronous Hardware Trigger)
+        const btnTestDirectVibe = document.getElementById('btnTestDirectVibe');
+        function triggerDirectVibe(e) {
+            if (e) e.preventDefault();
+            initAudio();
+            playHapticThump(45, 0.25, 1.0);
+
+            if ('vibrate' in navigator) {
+                try {
+                    // Direct synchronous 350ms vibration pattern
+                    const ok = navigator.vibrate([250, 80, 250]);
+                    updateDiagResult(ok, '250ms+250ms');
+                    if (ok) {
+                        btnTestDirectVibe.innerText = '✅ VIBRATING!';
+                    } else {
+                        btnTestDirectVibe.innerText = '⚠️ Blocked by Android OS';
+                    }
+                } catch (err) {
+                    updateDiagResult(false, 350, err.message);
+                    btnTestDirectVibe.innerText = '❌ Error';
+                }
+            } else {
+                updateDiagResult(false, 0, 'Apple iOS does not support Web Vibration API');
+                btnTestDirectVibe.innerText = '⚠️ Apple iOS (Audio Only)';
+            }
+
+            setTimeout(() => {
+                btnTestDirectVibe.innerText = '📳 Direct Vibrate Test';
+            }, 1800);
+        }
+
+        if (btnTestDirectVibe) {
+            btnTestDirectVibe.addEventListener('touchstart', triggerDirectVibe, { passive: false });
+            btnTestDirectVibe.addEventListener('click', triggerDirectVibe);
+        }
+
+        // Test Game Vibration Demo Button in Settings
+        if (btnTestRumble) {
+            btnTestRumble.addEventListener('click', () => {
+                initAudio();
+                // Trigger immediate initial hardware pulse on direct click
+                if ('vibrate' in navigator) {
+                    navigator.vibrate([100, 50, 150]);
+                }
+                btnTestRumble.innerText = '⚡ Vibrating (Testing)...';
+                btnTestRumble.style.background = 'rgba(255, 183, 3, 0.3)';
+                btnTestRumble.style.borderColor = '#ffb703';
+                btnTestRumble.style.color = '#ffb703';
+
+                // Phase 1: High frequency light weapon fire (small motor)
+                handleGameRumble(0, 200);
+
+                setTimeout(() => {
+                    // Phase 2: Maximum impact explosion / collision (both motors full force)
+                    handleGameRumble(255, 255);
+                }, 450);
+
+                setTimeout(() => {
+                    // Phase 3: Heavy engine rev / road texture (large motor)
+                    handleGameRumble(130, 50);
+                }, 1250);
+
+                setTimeout(() => {
+                    stopGameRumble();
+                    btnTestRumble.innerText = '⚡ Game Rumble Demo';
+                    btnTestRumble.style.background = 'rgba(0, 212, 255, 0.18)';
+                    btnTestRumble.style.borderColor = 'var(--accent-cyan)';
+                    btnTestRumble.style.color = 'var(--accent-cyan)';
+                }, 2000);
+            });
+        }
+
+        // Player Slot Toggle (P1 / P2)
+        const btnSlot = document.getElementById('btnPlayerSlot');
+        let lastSlotToggleTime = 0;
+
+        function togglePlayerSlot(e) {
+            if (e) {
+                if (typeof e.preventDefault === 'function') e.preventDefault();
+                if (typeof e.stopPropagation === 'function') e.stopPropagation();
+            }
+            const now = Date.now();
+            if (now - lastSlotToggleTime < 350) return;
+            lastSlotToggleTime = now;
+
+            const nextSlot = (CONFIG.slot === 1) ? 2 : 1;
+            CONFIG.slot = nextSlot;
+            inputState.slot = nextSlot;
+
+            if (btnSlot) {
+                btnSlot.innerText = `🎮 P${nextSlot}`;
+                if (nextSlot === 2) {
+                    btnSlot.classList.add('p2');
+                } else {
+                    btnSlot.classList.remove('p2');
+                }
+            }
+            haptic(40);
+            if (typeof showProfileToast === 'function') {
+                showProfileToast(`🎮 Player ${nextSlot} Active (Slot ${nextSlot})`);
+            }
+            if (window.ProfileManager && typeof window.ProfileManager.autoSync === 'function') {
+                window.ProfileManager.autoSync();
+            }
+        }
+
+        if (btnSlot) {
+            btnSlot.onclick = togglePlayerSlot;
+        }
+
+        // ==========================================
+        // ROBUST CROSS-BROWSER FULLSCREEN & ORIENTATION
+        // ==========================================
+        const btnFullscreen = document.getElementById('btnFullscreen');
+
+        function isFullscreen() {
+            return !!(
+                document.fullscreenElement ||
+                document.webkitFullscreenElement ||
+                document.webkitCurrentFullScreenElement ||
+                document.mozFullScreenElement ||
+                document.msFullscreenElement
+            );
+        }
+
+        function updateFullscreenUI() {
+            if (!btnFullscreen) return;
+            if (isFullscreen()) {
+                btnFullscreen.innerText = '🗗';
+                btnFullscreen.title = 'Exit Fullscreen';
+                btnFullscreen.classList.add('active');
+                btnFullscreen.style.borderColor = 'var(--accent-cyan)';
+                btnFullscreen.style.color = 'var(--accent-cyan)';
+            } else {
+                btnFullscreen.innerText = '⛶';
+                btnFullscreen.title = 'Enter Fullscreen';
+                btnFullscreen.classList.remove('active');
+                btnFullscreen.style.borderColor = '';
+                btnFullscreen.style.color = '';
+            }
+        }
+
+        ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(ev => {
+            document.addEventListener(ev, updateFullscreenUI);
+        });
+
+        let isTogglingFullscreen = false;
+        let lastFullscreenToggleTime = 0;
+
+        async function toggleFullscreen(e) {
+            if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+            const now = Date.now();
+            if (now - lastFullscreenToggleTime < 400 || isTogglingFullscreen) return;
+            lastFullscreenToggleTime = now;
+            isTogglingFullscreen = true;
+
+            haptic(30);
+
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+            if (isFullscreen()) {
+                try {
+                    if (document.exitFullscreen) {
+                        await document.exitFullscreen();
+                    } else if (document.webkitExitFullscreen) {
+                        await document.webkitExitFullscreen();
+                    } else if (document.webkitCancelFullScreen) {
+                        await document.webkitCancelFullScreen();
+                    } else if (document.mozCancelFullScreen) {
+                        await document.mozCancelFullScreen();
+                    } else if (document.msExitFullscreen) {
+                        await document.msExitFullscreen();
+                    }
+                    if (screen.orientation && screen.orientation.unlock) {
+                        screen.orientation.unlock();
+                    }
+                    if (typeof showProfileToast === 'function') showProfileToast('🗗 Exited Fullscreen');
+                } catch (err) {
+                    console.warn('Exit fullscreen error:', err);
+                } finally {
+                    updateFullscreenUI();
+                    setTimeout(() => { isTogglingFullscreen = false; }, 300);
+                }
+                return;
+            }
+
+            const docEl = document.documentElement || document.body;
+            const requestFS = docEl.requestFullscreen ||
+                              docEl.webkitRequestFullscreen ||
+                              docEl.webkitRequestFullScreen ||
+                              docEl.mozRequestFullScreen ||
+                              docEl.msRequestFullscreen;
+
+            if (!requestFS) {
+                if (isIOS) {
+                    if (typeof showProfileToast === 'function') showProfileToast('📱 iPhone Tip: Safari Share (📤) > "Add to Home Screen"');
+                    alert('📱 iPhone / iPad Safari Fullscreen:\n\nApple ne iPhone Safari browser me standard Fullscreen API disable kiya hai.\n\n100% Fullscreen ke liye:\n1. Safari me Share icon (📤) dabayein.\n2. "Add to Home Screen" (होम स्क्रीन में जोड़ें) chunein.\n3. Phir Home Screen se open karein — ye bina kisi address bar ke Fullscreen chalega!');
+                } else {
+                    if (typeof showProfileToast === 'function') showProfileToast('⚠️ PC: F11 dabayein (Browser Fullscreen)');
+                }
+                isTogglingFullscreen = false;
+                return;
+            }
+
+            try {
+                let p = null;
+                if (docEl.requestFullscreen) {
+                    p = docEl.requestFullscreen();
+                } else if (requestFS) {
+                    p = requestFS.call(docEl);
+                }
+                if (p && p.then) {
+                    await p;
+                }
+
+                if (screen.orientation && screen.orientation.lock) {
+                    screen.orientation.lock('landscape').catch(() => {});
+                }
+
+                if (typeof showProfileToast === 'function') showProfileToast('⛶ Fullscreen Active');
+            } catch (err) {
+                console.warn('Fullscreen request failed:', err);
+                if (isIOS) {
+                    if (typeof showProfileToast === 'function') showProfileToast('📱 iPhone: Safari Share (📤) > "Add to Home Screen"');
+                } else {
+                    if (typeof showProfileToast === 'function') showProfileToast('⚠️ PC: F11 dabayein (Browser Fullscreen)');
+                }
+            } finally {
+                updateFullscreenUI();
+                setTimeout(() => { isTogglingFullscreen = false; }, 300);
+            }
+        }
+
+        if (btnFullscreen) {
+            btnFullscreen.onclick = toggleFullscreen;
+        }
+
+        // ==========================================
+        // DRAG & DROP POSITIONING & SIZE CUSTOMIZER
+        // ==========================================
+        const draggables = document.querySelectorAll('.draggable');
+        const editToolbar = document.getElementById('editToolbar');
+        const btnSaveLayout = document.getElementById('btnSaveLayout');
+        const btnResetLayout = document.getElementById('btnResetLayout');
+        const btnDoneEdit = document.getElementById('btnDoneEdit');
+        const lblSelectedElem = document.getElementById('lblSelectedElem');
+        const lblElemScale = document.getElementById('lblElemScale');
+        const btnElemScaleDown = document.getElementById('btnElemScaleDown');
+        const btnElemScaleUp = document.getElementById('btnElemScaleUp');
+
+        let selectedDraggable = null;
+
+        function applyElementTransform(el) {
+            const x = parseFloat(el.dataset.transX || '0');
+            const y = parseFloat(el.dataset.transY || '0');
+            const s = parseFloat(el.dataset.scale || '1');
+            el.style.transform = `translate(${x}px, ${y}px) scale(${s})`;
+            el.style.transformOrigin = 'center center';
+        }
+
+        function selectElement(el) {
+            draggables.forEach(d => d.classList.remove('selected'));
+            selectedDraggable = el;
+            if (el) {
+                el.classList.add('selected');
+                const title = el.dataset.title || el.id || 'Element';
+                lblSelectedElem.innerText = `🎯 ${title}`;
+                const curScale = parseFloat(el.dataset.scale || '1');
+                lblElemScale.innerText = `${Math.round(curScale * 100)}%`;
+            } else {
+                lblSelectedElem.innerText = '🖐️ Tap button/stick to resize';
+                lblElemScale.innerText = '100%';
+            }
+        }
+
+        btnElemScaleDown.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (!selectedDraggable) {
+                alert('Pehle kisi button ya stick par tap karein, fir ➖ ya ➕ se size chhota-bada karein!');
+                return;
+            }
+            let s = parseFloat(selectedDraggable.dataset.scale || '1');
+            s = Math.max(0.5, Math.round((s - 0.1) * 10) / 10);
+            selectedDraggable.dataset.scale = s;
+            applyElementTransform(selectedDraggable);
+            lblElemScale.innerText = `${Math.round(s * 100)}%`;
+            haptic(20);
+        });
+
+        btnElemScaleUp.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (!selectedDraggable) {
+                alert('Pehle kisi button ya stick par tap karein, fir ➖ ya ➕ se size chhota-bada karein!');
+                return;
+            }
+            let s = parseFloat(selectedDraggable.dataset.scale || '1');
+            s = Math.min(2.0, Math.round((s + 0.1) * 10) / 10);
+            selectedDraggable.dataset.scale = s;
+            applyElementTransform(selectedDraggable);
+            lblElemScale.innerText = `${Math.round(s * 100)}%`;
+            haptic(20);
+        });
+
+        function toggleEdit(enable) {
+            isEditMode = enable;
+            if (isEditMode) {
+                settingsDrawer.classList.remove('open');
+                document.body.classList.add('editing');
+                editToolbar.classList.add('active');
+                selectElement(null);
+            } else {
+                document.body.classList.remove('editing');
+                editToolbar.classList.remove('active');
+                selectElement(null);
+            }
+            haptic(35);
+        }
+
+        document.getElementById('btnStartEditDrawer').addEventListener('click', () => toggleEdit(true));
+        btnDoneEdit.addEventListener('click', () => toggleEdit(false));
+
+        draggables.forEach(el => {
+            let startX, startY, origX = 0, origY = 0;
+
+            el.addEventListener('touchstart', (e) => {
+                if (!isEditMode) return;
+                const touch = e.touches[0];
+                startX = touch.clientX;
+                startY = touch.clientY;
+                origX = parseFloat(el.dataset.transX || '0');
+                origY = parseFloat(el.dataset.transY || '0');
+                selectElement(el);
+                haptic(15);
+            }, { passive: false });
+
+            el.addEventListener('touchmove', (e) => {
+                if (!isEditMode) return;
+                e.preventDefault();
+                const touch = e.touches[0];
+                const newX = origX + (touch.clientX - startX);
+                const newY = origY + (touch.clientY - startY);
+                el.dataset.transX = newX;
+                el.dataset.transY = newY;
+                applyElementTransform(el);
+            }, { passive: false });
+
+            el.addEventListener('click', (e) => {
+                if (!isEditMode) return;
+                selectElement(el);
+            });
+        });
+
+        btnSaveLayout.addEventListener('click', () => {
+            if (typeof ProfileManager !== 'undefined' && ProfileManager.saveCurrentToActiveProfile) {
+                ProfileManager.saveCurrentToActiveProfile();
+            } else {
+                const layout = {};
+                draggables.forEach(el => {
+                    layout[el.id] = {
+                        x: parseFloat(el.dataset.transX || '0'),
+                        y: parseFloat(el.dataset.transY || '0'),
+                        scale: parseFloat(el.dataset.scale || '1')
+                    };
+                });
+                localStorage.setItem(`vibe_layout_${CONFIG.profile}`, JSON.stringify(layout));
+                showProfileToast('💾 Layout Positions Saved!');
+            }
+        });
+
+        btnResetLayout.addEventListener('click', () => {
+            localStorage.removeItem(`vibe_layout_${CONFIG.profile}`);
+            draggables.forEach(el => {
+                el.dataset.transX = 0;
+                el.dataset.transY = 0;
+                el.dataset.scale = 1;
+                el.style.transform = 'none';
+            });
+            selectElement(null);
+            if (typeof ProfileManager !== 'undefined' && ProfileManager.autoSync) {
+                ProfileManager.autoSync();
+            }
+            haptic(50);
+            showProfileToast('🔄 Layout Positions Reset!');
+        });
+
+        function loadSavedLayout() {
+            try {
+                const saved = localStorage.getItem(`vibe_layout_${CONFIG.profile}`);
+                if (saved) {
+                    const layout = JSON.parse(saved);
+                    draggables.forEach(el => {
+                        if (layout[el.id]) {
+                            el.dataset.transX = layout[el.id].x || 0;
+                            el.dataset.transY = layout[el.id].y || 0;
+                            el.dataset.scale = layout[el.id].scale || 1;
+                            applyElementTransform(el);
+                        } else {
+                            el.dataset.transX = 0;
+                            el.dataset.transY = 0;
+                            el.dataset.scale = 1;
+                            el.style.transform = 'none';
+                        }
+                    });
+                } else {
+                    draggables.forEach(el => {
+                        el.dataset.transX = 0;
+                        el.dataset.transY = 0;
+                        el.dataset.scale = 1;
+                        el.style.transform = 'none';
+                    });
+                }
+            } catch (e) {}
+        }
+        loadSavedLayout();
+
+        // ==========================================
+        // CONTROLLER OVERALL GLOBAL SIZE TUNER
+        // ==========================================
+        const controllerRoot = document.getElementById('controllerRoot');
+        const sliderGlobalScale = document.getElementById('sliderGlobalScale');
+        const lblGlobalScale = document.getElementById('lblGlobalScale');
+        const scalePreset85 = document.getElementById('scalePreset85');
+        const scalePreset100 = document.getElementById('scalePreset100');
+        const scalePreset120 = document.getElementById('scalePreset120');
+
+        function setGlobalScale(percent) {
+            const scaleVal = percent / 100;
+            controllerRoot.style.transform = scaleVal === 1 ? 'none' : `scale(${scaleVal})`;
+            controllerRoot.style.transformOrigin = 'center 40%';
+            lblGlobalScale.innerText = `${percent}%`;
+            sliderGlobalScale.value = percent;
+
+            [scalePreset85, scalePreset100, scalePreset120].forEach(p => p.classList.remove('active'));
+            if (percent === 85) scalePreset85.classList.add('active');
+            else if (percent === 100) scalePreset100.classList.add('active');
+            else if (percent === 120) scalePreset120.classList.add('active');
+
+            localStorage.setItem('vibe_global_scale', percent);
+            if (typeof ProfileManager !== 'undefined') ProfileManager.autoSync();
+        }
+
+        sliderGlobalScale.addEventListener('input', (e) => setGlobalScale(parseInt(e.target.value, 10)));
+        scalePreset85.addEventListener('click', () => { setGlobalScale(85); haptic(20); });
+        scalePreset100.addEventListener('click', () => { setGlobalScale(100); haptic(20); });
+        scalePreset120.addEventListener('click', () => { setGlobalScale(120); haptic(20); });
+
+        const savedGlobalScale = parseInt(localStorage.getItem('vibe_global_scale') || '100', 10);
+        setGlobalScale(savedGlobalScale);
+
+        // ========================================================
+        // DYNAMIC BACKGROUND GRAPHICS & VISUAL FX ENGINE
+        // ========================================================
+        const BG_FX_NAMES = {
+            aurora: 'CYBER AURORA',
+            synth: 'SYNTHWAVE GRID',
+            circuit: 'HYPER CIRCUIT',
+            minimal: 'MINIMAL DARK'
+        };
+
+        function updateHoloProfile(profile) {
+            // Center hologram graphic removed per user preference
+        }
+
+        function updateFloatingGlyphs(profile) {
+            const container = document.getElementById('floatingGlyphs');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const glyphDefs = {
+                ps5: [
+                    { text: '△', color: '#10b981', x: 16, y: 22, delay: 0, dur: 11 },
+                    { text: '▢', color: '#ff2a6d', x: 25, y: 68, delay: 2, dur: 14 },
+                    { text: '✕', color: '#00d4ff', x: 40, y: 16, delay: 1, dur: 13 },
+                    { text: '○', color: '#ff0055', x: 58, y: 84, delay: 3, dur: 12 },
+                    { text: '△', color: '#10b981', x: 74, y: 20, delay: 4, dur: 15 },
+                    { text: '▢', color: '#ff2a6d', x: 84, y: 66, delay: 1.5, dur: 10 },
+                    { text: '✕', color: '#00d4ff', x: 32, y: 80, delay: 2.5, dur: 16 },
+                    { text: '○', color: '#ff0055', x: 67, y: 16, delay: 3.5, dur: 12.5 }
+                ],
+                xbox: [
+                    { text: 'Y', color: '#ffb703', x: 16, y: 22, delay: 0, dur: 11 },
+                    { text: 'X', color: '#00d4ff', x: 25, y: 68, delay: 2, dur: 14 },
+                    { text: 'A', color: '#10b981', x: 40, y: 16, delay: 1, dur: 13 },
+                    { text: 'B', color: '#ff2a6d', x: 58, y: 84, delay: 3, dur: 12 },
+                    { text: 'Y', color: '#ffb703', x: 74, y: 20, delay: 4, dur: 15 },
+                    { text: 'X', color: '#00d4ff', x: 84, y: 66, delay: 1.5, dur: 10 },
+                    { text: 'A', color: '#10b981', x: 32, y: 80, delay: 2.5, dur: 16 },
+                    { text: 'B', color: '#ff2a6d', x: 67, y: 16, delay: 3.5, dur: 12.5 }
+                ],
+                fight: [
+                    { text: '⚡', color: '#ffb703', x: 16, y: 22, delay: 0, dur: 11 },
+                    { text: '💥', color: '#ff0055', x: 25, y: 68, delay: 2, dur: 14 },
+                    { text: '🔥', color: '#ff5400', x: 40, y: 16, delay: 1, dur: 13 },
+                    { text: '⚔️', color: '#00d4ff', x: 58, y: 84, delay: 3, dur: 12 },
+                    { text: '👊', color: '#ffb703', x: 74, y: 20, delay: 4, dur: 15 },
+                    { text: '🥊', color: '#ff0055', x: 84, y: 66, delay: 1.5, dur: 10 },
+                    { text: '⚡', color: '#00d4ff', x: 32, y: 80, delay: 2.5, dur: 16 },
+                    { text: '🔥', color: '#ff5400', x: 67, y: 16, delay: 3.5, dur: 12.5 }
+                ]
+            };
+
+            const list = glyphDefs[profile] || glyphDefs.ps5;
+            list.forEach(g => {
+                const el = document.createElement('div');
+                el.className = 'floating-glyph';
+                el.innerText = g.text;
+                el.style.color = g.color;
+                el.style.left = g.x + '%';
+                el.style.top = g.y + '%';
+                el.style.animationDelay = g.delay + 's';
+                el.style.animationDuration = g.dur + 's';
+                container.appendChild(el);
+            });
+        }
+
+        function setBgFxStyle(styleKey) {
+            const layer = document.getElementById('bgGraphicsLayer');
+            if (!layer) return;
+            layer.classList.remove('fx-aurora', 'fx-synth', 'fx-circuit', 'fx-minimal');
+            if (styleKey === 'holo') styleKey = 'aurora';
+            layer.classList.add('fx-' + styleKey);
+
+            const lbl = document.getElementById('lblBgGfxStyle');
+            if (lbl) lbl.innerText = BG_FX_NAMES[styleKey] || styleKey.toUpperCase();
+
+            document.querySelectorAll('[data-fx]').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.fx === styleKey);
+            });
+
+            localStorage.setItem('vibe_bg_fx', styleKey);
+            if (typeof ProfileManager !== 'undefined') ProfileManager.autoSync();
+        }
+
+        function setBgGfxIntensity(val) {
+            document.documentElement.style.setProperty('--bg-gfx-opacity', (val / 100).toString());
+            const lbl = document.getElementById('lblGfxIntensity');
+            if (lbl) lbl.innerText = val + '%';
+            const slider = document.getElementById('sliderGfxIntensity');
+            if (slider) slider.value = val;
+            localStorage.setItem('vibe_bg_intensity', val);
+            if (typeof ProfileManager !== 'undefined') ProfileManager.autoSync();
+        }
+
+        function toggleGlyphsVisibility() {
+            const layer = document.getElementById('bgGraphicsLayer');
+            if (!layer) return;
+            const isHidden = layer.classList.toggle('glyphs-hidden');
+            const btn = document.getElementById('btnToggleGlyphs');
+            if (btn) {
+                btn.innerText = isHidden ? '✨ Glyphs: OFF' : '✨ Glyphs: ON';
+                btn.classList.toggle('active', !isHidden);
+            }
+            localStorage.setItem('vibe_bg_glyphs', isHidden ? '0' : '1');
+            if (typeof ProfileManager !== 'undefined') ProfileManager.autoSync();
+        }
+
+        // Wire Background FX Style buttons
+        document.querySelectorAll('[data-fx]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const fx = btn.dataset.fx;
+                if (fx) {
+                    setBgFxStyle(fx);
+                    haptic(20);
+                }
+            });
+        });
+
+        // Wire Glyphs toggle button
+        const btnToggleGlyphs = document.getElementById('btnToggleGlyphs');
+        if (btnToggleGlyphs) {
+            btnToggleGlyphs.addEventListener('click', () => {
+                toggleGlyphsVisibility();
+                haptic(20);
+            });
+        }
+
+        // Wire Glow & Brightness slider
+        const sliderGfxIntensity = document.getElementById('sliderGfxIntensity');
+        if (sliderGfxIntensity) {
+            sliderGfxIntensity.addEventListener('input', (e) => {
+                setBgGfxIntensity(parseInt(e.target.value, 10));
+            });
+        }
+
+        // Initialize Background FX and Glyphs from Storage & Profile
+        let savedBgFx = localStorage.getItem('vibe_bg_fx') || 'aurora';
+        if (savedBgFx === 'holo') savedBgFx = 'aurora';
+        setBgFxStyle(savedBgFx);
+
+        const savedGfxIntensity = parseInt(localStorage.getItem('vibe_bg_intensity') || '85', 10);
+        setBgGfxIntensity(savedGfxIntensity);
+
+        const savedGlyphsState = localStorage.getItem('vibe_bg_glyphs');
+        if (savedGlyphsState === '0') {
+            const layer = document.getElementById('bgGraphicsLayer');
+            if (layer) layer.classList.add('glyphs-hidden');
+            if (btnToggleGlyphs) {
+                btnToggleGlyphs.innerText = '✨ Glyphs: OFF';
+                btnToggleGlyphs.classList.remove('active');
+            }
+        }
+
+        // Initial setup for active profile's hologram and glyphs
+        updateHoloProfile(CONFIG.profile || 'ps5');
+        updateFloatingGlyphs(CONFIG.profile || 'ps5');
+
+        // ========================================================
+        // USER PROFILES & ADVANCED SETTINGS PERSISTENCE ENGINE
+        // ========================================================
+        let toastTimer = null;
+        function showProfileToast(text) {
+            const toast = document.getElementById('profileToast');
+            if (!toast) return;
+            toast.innerText = text;
+            toast.classList.add('show');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2200);
+        }
+
+        function captureCurrentState() {
+            const layout = {};
+            draggables.forEach(el => {
+                layout[el.id] = {
+                    x: parseFloat(el.dataset.transX || '0'),
+                    y: parseFloat(el.dataset.transY || '0'),
+                    scale: parseFloat(el.dataset.scale || '1')
+                };
+            });
+
+            const activeCat = (CONFIG.profile === 'xbox' || CONFIG.profile === 'fight') ? CONFIG.profile : 'ps5';
+            const activeTheme = currentActiveThemeKey || (CONSOLE_THEMES[activeCat] ? CONSOLE_THEMES[activeCat].defaultTheme : 'ps5_glacier');
+            const activeAccent = currentActiveAccent || '#38bdf8';
+            const activeAccentName = (lblAccentColor ? lblAccentColor.innerText : 'GLACIER BLUE');
+
+            return {
+                consoleProfile: CONFIG.profile || 'ps5',
+                slot: CONFIG.slot || 1,
+                globalScale: parseInt(sliderGlobalScale ? sliderGlobalScale.value : '100', 10),
+                deadzone: Math.round((CONFIG.deadzone || 0.05) * 100),
+                stickSens: Math.round((CONFIG.stickSens || 1.0) * 100),
+                gyroEnabled: !!CONFIG.gyroEnabled,
+                gyroSens: parseFloat(CONFIG.gyroSens || 1.2),
+                invertY: !!CONFIG.invertY,
+                hapticIntensity: CONFIG.hapticIntensity !== undefined ? CONFIG.hapticIntensity : 40,
+                theme: activeTheme,
+                accent: activeAccent,
+                accentName: activeAccentName,
+                bgFx: localStorage.getItem('vibe_bg_fx') || 'aurora',
+                bgIntensity: parseInt(localStorage.getItem('vibe_bg_intensity') || '85', 10),
+                bgGlyphs: localStorage.getItem('vibe_bg_glyphs') || '1',
+                fightMode: localStorage.getItem('vibe_fight_mode') || 'joystick',
+                layout: layout
+            };
+        }
+
+        function applyProfileState(state, skipNotification = false) {
+            if (!state) return;
+
+            // 1. Console Profile
+            if (state.consoleProfile && state.consoleProfile !== CONFIG.profile) {
+                setProfile(state.consoleProfile);
+            }
+
+            // 2. Player Slot
+            if (state.slot) {
+                CONFIG.slot = state.slot;
+                inputState.slot = state.slot;
+                if (btnSlot) {
+                    btnSlot.innerText = `🎮 P${state.slot}`;
+                    btnSlot.classList.toggle('p2', state.slot === 2);
+                }
+            }
+
+            // 3. Global Scale
+            if (state.globalScale && typeof setGlobalScale === 'function') {
+                setGlobalScale(state.globalScale);
+            }
+
+            // 4. Deadzone
+            if (state.deadzone !== undefined) {
+                CONFIG.deadzone = state.deadzone / 100;
+                if (sliderDeadzone) sliderDeadzone.value = state.deadzone;
+                if (lblDeadzone) lblDeadzone.innerText = `${state.deadzone}%`;
+            }
+
+            // 5. Stick Sens
+            if (state.stickSens !== undefined) {
+                CONFIG.stickSens = state.stickSens / 100;
+                if (sliderStickSens) sliderStickSens.value = state.stickSens;
+                if (lblStickSens) lblStickSens.innerText = `${state.stickSens}%`;
+            }
+
+            // 6. POV / Gyro
+            if (state.gyroSens !== undefined) {
+                CONFIG.gyroSens = state.gyroSens;
+                if (sliderGyroSens) sliderGyroSens.value = state.gyroSens;
+                if (lblGyroSens) lblGyroSens.innerText = `${state.gyroSens.toFixed(1)}x`;
+            }
+            if (state.invertY !== undefined) {
+                CONFIG.invertY = state.invertY;
+                if (trackInvertY) trackInvertY.classList.toggle('checked', state.invertY);
+            }
+
+            // 7. Haptics
+            if (state.hapticIntensity !== undefined && typeof setHaptic === 'function') {
+                let el = hapticHigh;
+                if (state.hapticIntensity === 0) el = hapticOff;
+                else if (state.hapticIntensity === 20) el = hapticMed;
+                setHaptic(state.hapticIntensity, el, true);
+            }
+
+            // 8. Theme & Accent
+            const cat = (state.consoleProfile === 'xbox' || state.consoleProfile === 'fight') ? state.consoleProfile : 'ps5';
+            if (state.theme && typeof applyTheme === 'function') {
+                applyTheme(state.theme, cat, true);
+            }
+            if (state.accent && typeof applyAccentColor === 'function') {
+                applyAccentColor(state.accent, state.accentName || 'CUSTOM ACCENT', cat, true);
+            }
+
+            // 9. Background FX
+            if (state.bgFx && typeof setBgFxStyle === 'function') {
+                setBgFxStyle(state.bgFx);
+            }
+            if (state.bgIntensity !== undefined && typeof setBgGfxIntensity === 'function') {
+                setBgGfxIntensity(state.bgIntensity);
+            }
+            if (state.bgGlyphs !== undefined) {
+                const layer = document.getElementById('bgGraphicsLayer');
+                const btn = document.getElementById('btnToggleGlyphs');
+                const shouldHide = (state.bgGlyphs === '0');
+                if (layer) layer.classList.toggle('glyphs-hidden', shouldHide);
+                if (btn) {
+                    btn.innerText = shouldHide ? '✨ Floating Icons: OFF' : '✨ Floating Icons: ON';
+                    btn.classList.toggle('active', !shouldHide);
+                }
+                localStorage.setItem('vibe_bg_glyphs', state.bgGlyphs);
+            }
+
+            // 10. Layout (Positions & Scales)
+            const activeLayout = (state.layouts && state.layouts[state.consoleProfile]) || state.layout;
+            if (activeLayout) {
+                draggables.forEach(el => {
+                    if (activeLayout[el.id]) {
+                        el.dataset.transX = activeLayout[el.id].x || 0;
+                        el.dataset.transY = activeLayout[el.id].y || 0;
+                        el.dataset.scale = activeLayout[el.id].scale || 1;
+                        applyElementTransform(el);
+                    } else {
+                        el.dataset.transX = 0;
+                        el.dataset.transY = 0;
+                        el.dataset.scale = 1;
+                        el.style.transform = 'none';
+                    }
+                });
+            }
+
+            if (!skipNotification) {
+                showProfileToast(`✅ Profile Loaded!`);
+            }
+        }
+
+        window.ProfileManager = {
+            STORAGE_KEY: 'vibe_user_profiles_v2',
+
+            getData() {
+                try {
+                    const raw = localStorage.getItem(this.STORAGE_KEY);
+                    if (raw) {
+                        const parsed = JSON.parse(raw);
+                        if (parsed && parsed.profiles && Object.keys(parsed.profiles).length > 0) {
+                            return parsed;
+                        }
+                    }
+                } catch (e) {}
+
+                // Migrate legacy layouts if any
+                const currentLayout = {};
+                draggables.forEach(el => {
+                    currentLayout[el.id] = {
+                        x: parseFloat(el.dataset.transX || '0'),
+                        y: parseFloat(el.dataset.transY || '0'),
+                        scale: parseFloat(el.dataset.scale || '1')
+                    };
+                });
+
+                const defaultProf = {
+                    id: 'default',
+                    name: 'Default Profile',
+                    ...captureCurrentState(),
+                    layouts: {
+                        [CONFIG.profile || 'ps5']: currentLayout
+                    }
+                };
+
+                const initialData = {
+                    activeProfileId: 'default',
+                    profiles: {
+                        'default': defaultProf
+                    }
+                };
+                this.saveData(initialData);
+                return initialData;
+            },
+
+            saveData(data) {
+                localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
+            },
+
+            getActiveProfile() {
+                const data = this.getData();
+                if (!data.profiles[data.activeProfileId]) {
+                    data.activeProfileId = Object.keys(data.profiles)[0] || 'default';
+                }
+                return data.profiles[data.activeProfileId];
+            },
+
+            saveCurrentToActiveProfile(silent = false) {
+                const data = this.getData();
+                const activeId = data.activeProfileId || 'default';
+                if (!data.profiles[activeId]) {
+                    data.profiles[activeId] = { id: activeId, name: 'Default Profile' };
+                }
+
+                const current = captureCurrentState();
+                const existingLayouts = data.profiles[activeId].layouts || {};
+                existingLayouts[CONFIG.profile || 'ps5'] = current.layout;
+
+                data.profiles[activeId] = {
+                    ...data.profiles[activeId],
+                    ...current,
+                    layouts: existingLayouts
+                };
+
+                // Also update legacy vibe_layout for safety
+                localStorage.setItem(`vibe_layout_${CONFIG.profile}`, JSON.stringify(current.layout));
+
+                this.saveData(data);
+                this.updateUI();
+                if (!silent) {
+                    showProfileToast(`💾 Saved to "${data.profiles[activeId].name}"`);
+                    haptic(50);
+                }
+            },
+
+            autoSync() {
+                const data = this.getData();
+                const activeId = data.activeProfileId || 'default';
+                if (data.profiles[activeId]) {
+                    const current = captureCurrentState();
+                    const existingLayouts = data.profiles[activeId].layouts || {};
+                    existingLayouts[CONFIG.profile || 'ps5'] = current.layout;
+                    data.profiles[activeId] = {
+                        ...data.profiles[activeId],
+                        ...current,
+                        layouts: existingLayouts
+                    };
+                    this.saveData(data);
+                }
+            },
+
+            switchProfile(profileId) {
+                const data = this.getData();
+                if (!data.profiles[profileId]) return;
+                data.activeProfileId = profileId;
+                this.saveData(data);
+                this.updateUI();
+                applyProfileState(data.profiles[profileId]);
+                haptic(30);
+            },
+
+            createProfile(name) {
+                if (!name || !name.trim()) return;
+                const data = this.getData();
+                const id = 'prof_' + Date.now();
+                const current = captureCurrentState();
+                const currentLayouts = {};
+                currentLayouts[CONFIG.profile || 'ps5'] = current.layout;
+
+                data.profiles[id] = {
+                    id: id,
+                    name: name.trim(),
+                    ...current,
+                    layouts: currentLayouts
+                };
+                data.activeProfileId = id;
+                this.saveData(data);
+                this.updateUI();
+                showProfileToast(`✨ Created "${name.trim()}"!`);
+                haptic(40);
+            },
+
+            renameActiveProfile(newName) {
+                if (!newName || !newName.trim()) return;
+                const data = this.getData();
+                const activeId = data.activeProfileId;
+                if (!data.profiles[activeId]) return;
+                data.profiles[activeId].name = newName.trim();
+                this.saveData(data);
+                this.updateUI();
+                showProfileToast(`✏️ Renamed to "${newName.trim()}"`);
+                haptic(20);
+            },
+
+            deleteActiveProfile() {
+                const data = this.getData();
+                const activeId = data.activeProfileId;
+                const keys = Object.keys(data.profiles);
+                if (keys.length <= 1) {
+                    alert('Cannot delete the only remaining profile!');
+                    return;
+                }
+                const oldName = data.profiles[activeId].name;
+                delete data.profiles[activeId];
+                data.activeProfileId = Object.keys(data.profiles)[0];
+                this.saveData(data);
+                this.updateUI();
+                applyProfileState(data.profiles[data.activeProfileId], true);
+                showProfileToast(`🗑️ Deleted "${oldName}"`);
+                haptic(30);
+            },
+
+            resetActiveProfile() {
+                if (!confirm('Are you sure you want to reset current profile layout & settings to default?')) return;
+                const data = this.getData();
+                const activeId = data.activeProfileId;
+                if (!data.profiles[activeId]) return;
+
+                data.profiles[activeId] = {
+                    id: activeId,
+                    name: data.profiles[activeId].name,
+                    consoleProfile: 'ps5',
+                    slot: 1,
+                    globalScale: 100,
+                    deadzone: 5,
+                    stickSens: 100,
+                    gyroEnabled: false,
+                    gyroSens: 1.2,
+                    invertY: false,
+                    hapticIntensity: 40,
+                    theme: 'ps5_glacier',
+                    accent: '#38bdf8',
+                    accentName: 'GLACIER BLUE',
+                    bgFx: 'aurora',
+                    bgIntensity: 85,
+                    bgGlyphs: '1',
+                    fightMode: 'joystick',
+                    layouts: { ps5: {}, xbox: {}, fight: {} },
+                    layout: {}
+                };
+                this.saveData(data);
+                this.updateUI();
+                applyProfileState(data.profiles[activeId], true);
+                showProfileToast(`🔄 "${data.profiles[activeId].name}" Reset`);
+                haptic(40);
+            },
+
+            exportActiveProfile() {
+                const activeProf = this.getActiveProfile();
+                const jsonStr = JSON.stringify(activeProf, null, 2);
+                const blob = new Blob([jsonStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `controller_profile_${activeProf.name.replace(/\s+/g, '_').toLowerCase()}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showProfileToast(`📤 "${activeProf.name}" Exported!`);
+            },
+
+            importProfileJSON(jsonStr) {
+                try {
+                    const imported = JSON.parse(jsonStr);
+                    if (!imported || typeof imported !== 'object') throw new Error('Invalid JSON format');
+                    const data = this.getData();
+                    const id = 'prof_' + Date.now();
+                    imported.id = id;
+                    imported.name = (imported.name || 'Imported Profile') + ' (Imported)';
+                    data.profiles[id] = imported;
+                    data.activeProfileId = id;
+                    this.saveData(data);
+                    this.updateUI();
+                    applyProfileState(imported);
+                    showProfileToast(`📥 Profile Imported!`);
+                    haptic(40);
+                } catch (e) {
+                    alert('❌ Failed to import: Invalid profile JSON file.');
+                }
+            },
+
+            updateUI() {
+                const data = this.getData();
+                const sel = document.getElementById('selUserProfile');
+                const lblActive = document.getElementById('lblActiveProfileName');
+                const lblToolbar = document.getElementById('lblToolbarProfile');
+
+                if (sel) {
+                    sel.innerHTML = '';
+                    Object.values(data.profiles).forEach(p => {
+                        const opt = document.createElement('option');
+                        opt.value = p.id;
+                        opt.innerText = p.name;
+                        if (p.id === data.activeProfileId) opt.selected = true;
+                        sel.appendChild(opt);
+                    });
+                }
+
+                const active = data.profiles[data.activeProfileId];
+                if (active) {
+                    if (lblActive) lblActive.innerText = `ACTIVE: ${active.name.toUpperCase()}`;
+                    if (lblToolbar) lblToolbar.innerText = `PROFILE: ${active.name.toUpperCase()}`;
+                }
+            },
+
+            init() {
+                this.updateUI();
+                const activeProf = this.getActiveProfile();
+                applyProfileState(activeProf, true);
+            }
+        };
+        var ProfileManager = window.ProfileManager;
+
+        // Wire Profile Drawer Controls
+        const selUserProfile = document.getElementById('selUserProfile');
+        if (selUserProfile) {
+            selUserProfile.addEventListener('change', (e) => {
+                ProfileManager.switchProfile(e.target.value);
+            });
+        }
+
+        const btnSaveCurrentProfile = document.getElementById('btnSaveCurrentProfile');
+        if (btnSaveCurrentProfile) {
+            btnSaveCurrentProfile.addEventListener('click', () => {
+                ProfileManager.saveCurrentToActiveProfile();
+            });
+        }
+
+        const btnNewProfile = document.getElementById('btnNewProfile');
+        if (btnNewProfile) {
+            btnNewProfile.addEventListener('click', () => {
+                const count = Object.keys(ProfileManager.getData().profiles).length + 1;
+                const name = prompt('Enter a name for the new profile:', `Custom Profile ${count}`);
+                if (name) ProfileManager.createProfile(name);
+            });
+        }
+
+        const btnRenameProfile = document.getElementById('btnRenameProfile');
+        if (btnRenameProfile) {
+            btnRenameProfile.addEventListener('click', () => {
+                const currentName = ProfileManager.getActiveProfile().name;
+                const newName = prompt('Enter new profile name:', currentName);
+                if (newName) ProfileManager.renameActiveProfile(newName);
+            });
+        }
+
+        const btnDeleteProfile = document.getElementById('btnDeleteProfile');
+        if (btnDeleteProfile) {
+            btnDeleteProfile.addEventListener('click', () => {
+                ProfileManager.deleteActiveProfile();
+            });
+        }
+
+        const btnResetProfile = document.getElementById('btnResetProfile');
+        if (btnResetProfile) {
+            btnResetProfile.addEventListener('click', () => {
+                ProfileManager.resetActiveProfile();
+            });
+        }
+
+        const btnExportProfile = document.getElementById('btnExportProfile');
+        if (btnExportProfile) {
+            btnExportProfile.addEventListener('click', () => {
+                ProfileManager.exportActiveProfile();
+            });
+        }
+
+        const btnImportProfile = document.getElementById('btnImportProfile');
+        const fileProfileImport = document.getElementById('fileProfileImport');
+        if (btnImportProfile && fileProfileImport) {
+            btnImportProfile.addEventListener('click', () => {
+                fileProfileImport.click();
+            });
+            fileProfileImport.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    ProfileManager.importProfileJSON(event.target.result);
+                    fileProfileImport.value = '';
+                };
+                reader.readAsText(file);
+            });
+        }
+
+        // Initialize Profile Manager and auto-restore active profile
+        ProfileManager.init();
+    </script>
+</body>
+</html>

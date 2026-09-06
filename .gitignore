@@ -1,0 +1,32 @@
+# Binaries and executables
+*.exe
+*.exe~
+*.dll
+# Keep ViGEmClient driver client library
+!ViGEmClient.dll
+
+# Go build cache and test binaries
+*.test
+*.prof
+*.out
+
+# Environment & local settings
+.env
+.env.local
+
+# Logs and debug output
+*.log
+logs/
+
+# IDE, OS and agent cache
+.vscode/
+.idea/
+.gemini/
+.system_generated/
+.tempmediaStorage/
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Scratch files
+scratch/

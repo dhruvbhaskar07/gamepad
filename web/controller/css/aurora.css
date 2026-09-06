@@ -1,0 +1,263 @@
+/* ========================================================
+   DYNAMIC BACKGROUND GRAPHICS & VISUAL FX ENGINE
+   ======================================================== */
+:root {
+    --bg-gfx-opacity: 0.85;
+}
+
+.ambient-glow {
+    position: absolute;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.15;
+    pointer-events: none;
+    z-index: 0;
+    transition: background 0.4s;
+}
+.ambient-left { top: -50px; left: -50px; background: var(--accent-cyan); }
+.ambient-right { bottom: -50px; right: -50px; background: var(--accent-purple); }
+
+.bg-graphics-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+    opacity: var(--bg-gfx-opacity, 0.85);
+    transition: opacity 0.35s ease;
+}
+
+/* Fluid Multi-Color Aurora Mesh / Cosmic Plasma */
+.aurora-container {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+}
+
+.aurora-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.45;
+    mix-blend-mode: screen;
+    will-change: transform;
+    pointer-events: none;
+}
+
+.orb-cyan {
+    width: 400px;
+    height: 400px;
+    top: -80px;
+    left: -50px;
+    background: radial-gradient(circle, var(--accent-cyan) 0%, rgba(0, 212, 255, 0) 70%);
+    animation: driftOrb1 16s ease-in-out infinite alternate;
+}
+
+.orb-magenta {
+    width: 440px;
+    height: 440px;
+    bottom: -100px;
+    right: -70px;
+    background: radial-gradient(circle, #ff007f 0%, rgba(255, 0, 127, 0) 70%);
+    animation: driftOrb2 20s ease-in-out infinite alternate;
+}
+
+.orb-purple {
+    width: 380px;
+    height: 380px;
+    top: 20%;
+    right: 18%;
+    background: radial-gradient(circle, #8b5cf6 0%, rgba(139, 92, 246, 0) 70%);
+    animation: driftOrb3 18s ease-in-out infinite alternate;
+}
+
+.orb-emerald {
+    width: 350px;
+    height: 350px;
+    bottom: 12%;
+    left: 20%;
+    background: radial-gradient(circle, #10b981 0%, rgba(16, 185, 129, 0) 70%);
+    animation: driftOrb4 22s ease-in-out infinite alternate;
+}
+
+.orb-amber {
+    width: 320px;
+    height: 320px;
+    top: 36%;
+    left: 45%;
+    background: radial-gradient(circle, #ffb703 0%, rgba(255, 183, 3, 0) 70%);
+    animation: driftOrb5 14s ease-in-out infinite alternate;
+}
+
+@keyframes driftOrb1 {
+    0%   { transform: translate(0, 0) scale(1); }
+    50%  { transform: translate(70px, 50px) scale(1.15); }
+    100% { transform: translate(20px, 90px) scale(0.95); }
+}
+@keyframes driftOrb2 {
+    0%   { transform: translate(0, 0) scale(1); }
+    50%  { transform: translate(-80px, -60px) scale(1.2); }
+    100% { transform: translate(-30px, -110px) scale(0.9); }
+}
+@keyframes driftOrb3 {
+    0%   { transform: translate(0, 0) scale(1); }
+    50%  { transform: translate(-60px, 40px) scale(1.1); }
+    100% { transform: translate(40px, -30px) scale(0.95); }
+}
+@keyframes driftOrb4 {
+    0%   { transform: translate(0, 0) scale(1); }
+    50%  { transform: translate(50px, -40px) scale(1.18); }
+    100% { transform: translate(-30px, 50px) scale(0.9); }
+}
+@keyframes driftOrb5 {
+    0%   { transform: translate(0, 0) scale(0.9); opacity: 0.3; }
+    50%  { transform: translate(-40px, -30px) scale(1.25); opacity: 0.55; }
+    100% { transform: translate(50px, 30px) scale(1); opacity: 0.35; }
+}
+
+/* Perspective 3D Cyber Grid */
+.cyber-grid-container {
+    position: absolute;
+    inset: 0;
+    perspective: 450px;
+    overflow: hidden;
+    pointer-events: none;
+    opacity: 0.28;
+    transition: opacity 0.5s ease;
+}
+
+.cyber-grid-plane {
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    top: 25%;
+    left: -50%;
+    background-image: 
+        linear-gradient(to right, rgba(0, 212, 255, 0.2) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0, 212, 255, 0.2) 1px, transparent 1px);
+    background-size: 38px 38px;
+    transform: rotateX(68deg);
+    transform-origin: 50% 0;
+    animation: gridScroll 18s linear infinite;
+    mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 80%);
+    -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 80%);
+}
+
+@keyframes gridScroll {
+    0% { transform: rotateX(68deg) translateY(0); }
+    100% { transform: rotateX(68deg) translateY(38px); }
+}
+
+.cyber-grid-horizon {
+    position: absolute;
+    top: 28%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent 0%, var(--accent-cyan) 50%, transparent 100%);
+    box-shadow: 0 0 20px var(--accent-cyan);
+    opacity: 0.65;
+}
+
+/* Floating Holographic Sacred Glyphs */
+.floating-glyphs-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    transition: opacity 0.5s ease;
+}
+
+.floating-glyph {
+    position: absolute;
+    font-size: 22px;
+    font-weight: 900;
+    user-select: none;
+    pointer-events: none;
+    opacity: 0.45;
+    will-change: transform, opacity;
+    text-shadow: 0 0 14px currentColor, 0 0 28px currentColor;
+    animation: glyphFloat 12s ease-in-out infinite alternate;
+}
+
+@keyframes glyphFloat {
+    0% {
+        transform: translateY(0) rotate(0deg) scale(1);
+    }
+    50% {
+        transform: translateY(-24px) rotate(18deg) scale(1.15);
+        opacity: 0.75;
+    }
+    100% {
+        transform: translateY(16px) rotate(-14deg) scale(0.9);
+        opacity: 0.35;
+    }
+}
+
+/* Reactive Rumble Shockwave Ring */
+.rumble-shockwave {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 80px;
+    height: 80px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    border: 2px solid var(--accent-cyan);
+    opacity: 0;
+    pointer-events: none;
+}
+
+body.rumble-vibrating .rumble-shockwave {
+    animation: shockwaveSurge 0.4s infinite cubic-bezier(0.1, 0.8, 0.3, 1);
+}
+
+@keyframes shockwaveSurge {
+    0% {
+        width: 60px;
+        height: 60px;
+        opacity: 0.95;
+        border-color: #ff007f;
+        box-shadow: 0 0 18px #ff007f;
+    }
+    100% {
+        width: 520px;
+        height: 520px;
+        opacity: 0;
+        border-color: var(--accent-cyan);
+        box-shadow: 0 0 40px var(--accent-cyan);
+    }
+}
+
+/* Background Visual Style Presets */
+.fx-aurora .aurora-container { opacity: 1; }
+.fx-aurora .cyber-grid-container { opacity: 0.25; }
+.fx-aurora .floating-glyphs-layer { opacity: 0.65; }
+
+.fx-synth .aurora-container { opacity: 0.6; }
+.fx-synth .cyber-grid-container { opacity: 0.85; }
+.fx-synth .cyber-grid-plane {
+    background-image: 
+        linear-gradient(to right, rgba(255, 0, 127, 0.35) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0, 212, 255, 0.35) 1px, transparent 1px);
+}
+.fx-synth .cyber-grid-horizon {
+    background: linear-gradient(90deg, transparent 0%, #ff007f 50%, transparent 100%);
+    box-shadow: 0 0 28px #ff007f;
+}
+
+.fx-circuit .aurora-container { opacity: 0.3; }
+.fx-circuit .cyber-grid-container { opacity: 0.6; }
+.fx-circuit .cyber-grid-plane {
+    background-size: 24px 24px;
+}
+.fx-circuit .floating-glyphs-layer { opacity: 0.75; }
+
+.fx-minimal .aurora-container { opacity: 0.15; }
+.fx-minimal .cyber-grid-container { opacity: 0; }
+.fx-minimal .floating-glyphs-layer { opacity: 0; }
+
+.glyphs-hidden .floating-glyphs-layer { display: none !important; }
