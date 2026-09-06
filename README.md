@@ -159,7 +159,7 @@ go build -ldflags="-s -w" -o DualSenseServer.exe ./server
 
 ## 📡 Network & Binary Protocol
 
-<img src="assets/architecture-diagram.svg" alt="DualSense Zero-Latency Architecture Diagram" width="100%" />
+<img src="assets/architecture.png" alt="DualSense Zero-Latency Architecture Diagram" width="100%" />
 
 <br/><br/>
 
