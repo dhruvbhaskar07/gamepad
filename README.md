@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/hero-banner.svg" alt="DualSense Mobile Studio Banner" width="100%" />
+<img src="assets/banner.png" alt="DualSense Mobile Studio" width="100%" />
 
 <br/><br/>
 
@@ -84,7 +84,7 @@ The server will automatically start, detect your local IP address, check for the
 
 ## 🎮 Controller Modes
 
-<img src="assets/modes-preview.svg" alt="DualSense Mobile Controller Modes" width="100%" />
+<img src="assets/modes.png" alt="DualSense Mobile Controller Modes" width="100%" />
 
 <br/><br/>
 
