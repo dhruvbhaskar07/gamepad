@@ -1,9 +1,8 @@
 <div align="center">
 
-# 🎮 DualSense Mobile Studio
+<img src="assets/hero-banner.svg" alt="DualSense Mobile Studio Banner" width="100%" />
 
-### Turn Any Smartphone into a Zero-Latency Virtual Controller for Windows PC
-**PS5 DualSense &bull; Xbox Series X &bull; Sanwa Arcade Fightstick &bull; Gyro POV &bull; Force Feedback Rumble**
+<br/><br/>
 
 [![Go Version](https://img.shields.io/badge/Go-1.20+-00ADD8?style=for-the-badge&logo=go&logoColor=white)](https://go.dev/)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6?style=for-the-badge&logo=windows&logoColor=white)](https://microsoft.com)
@@ -85,6 +84,10 @@ The server will automatically start, detect your local IP address, check for the
 
 ## 🎮 Controller Modes
 
+<img src="assets/modes-preview.svg" alt="DualSense Mobile Controller Modes" width="100%" />
+
+<br/><br/>
+
 | Mode | Visual Theme | Best For | Key Controls |
 | :--- | :--- | :--- | :--- |
 | **PS5 DualSense** | Glacier Blue & Navy | Action, Adventure, Racing | D-Pad, Dual Sticks, Touchpad, L1/L2/R1/R2, M1/M2 Back Paddles |
@@ -155,6 +158,10 @@ go build -ldflags="-s -w" -o DualSenseServer.exe ./server
 ---
 
 ## 📡 Network & Binary Protocol
+
+<img src="assets/architecture-diagram.svg" alt="DualSense Zero-Latency Architecture Diagram" width="100%" />
+
+<br/><br/>
 
 The web controller sends compact 11-byte binary packets over WebSockets or UDP to minimize packet overhead:
 

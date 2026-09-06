@@ -1,0 +1,129 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 280" width="100%" height="100%">
+  <defs>
+    <linearGradient id="cardBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#101726"/>
+      <stop offset="100%" stop-color="#080c14"/>
+    </linearGradient>
+
+    <linearGradient id="flowCyan" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00f0ff"/>
+      <stop offset="100%" stop-color="#3b82f6"/>
+    </linearGradient>
+
+    <linearGradient id="flowOrange" x1="100%" y1="0%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#ff007f"/>
+      <stop offset="100%" stop-color="#ffb703"/>
+    </linearGradient>
+
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <style>
+      @keyframes dashForward {
+        from { stroke-dashoffset: 40; }
+        to { stroke-dashoffset: 0; }
+      }
+      @keyframes dashBackward {
+        from { stroke-dashoffset: 0; }
+        to { stroke-dashoffset: 40; }
+      }
+      @keyframes pulseNode {
+        0%, 100% { transform: scale(1); filter: drop-shadow(0 0 4px rgba(0,240,255,0.2)); }
+        50% { transform: scale(1.02); filter: drop-shadow(0 0 14px rgba(0,240,255,0.5)); }
+      }
+      .flow-forward {
+        stroke-dasharray: 8, 6;
+        animation: dashForward 1.2s linear infinite;
+      }
+      .flow-backward {
+        stroke-dasharray: 8, 6;
+        animation: dashBackward 1.5s linear infinite;
+      }
+      .node-card {
+        transition: all 0.3s ease;
+      }
+    </style>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="1100" height="280" fill="#06090f" rx="14" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+
+  <!-- Connecting Animated Data Pipes -->
+  <!-- Top: Input Stream (Left -> Right) -->
+  <path d="M 230,110 L 370,110" fill="none" stroke="url(#flowCyan)" stroke-width="3" class="flow-forward" filter="url(#glow)"/>
+  <path d="M 570,110 L 710,110" fill="none" stroke="url(#flowCyan)" stroke-width="3" class="flow-forward" filter="url(#glow)"/>
+  <path d="M 910,110 L 980,110" fill="none" stroke="url(#flowCyan)" stroke-width="3" class="flow-forward" filter="url(#glow)"/>
+
+  <!-- Flow labels Top -->
+  <text x="300" y="98" fill="#00f0ff" font-family="'JetBrains Mono', monospace" font-size="10" font-weight="700" text-anchor="middle">11-BYTE PACKET</text>
+  <text x="640" y="98" fill="#00f0ff" font-family="'JetBrains Mono', monospace" font-size="10" font-weight="700" text-anchor="middle">KERNEL IOCTL</text>
+
+  <!-- Bottom: Game Force Feedback Rumble Return (Right -> Left) -->
+  <path d="M 980,170 L 570,170" fill="none" stroke="url(#flowOrange)" stroke-width="2.5" class="flow-backward"/>
+  <path d="M 370,170 L 230,170" fill="none" stroke="url(#flowOrange)" stroke-width="2.5" class="flow-backward"/>
+  <!-- Flow labels Bottom -->
+  <text x="640" y="190" fill="#ff007f" font-family="'JetBrains Mono', monospace" font-size="10" font-weight="700" text-anchor="middle">◀ LIVE FORCE FEEDBACK RUMBLE TELEMETRY</text>
+
+  <!-- ================= Node 1: Mobile Controller ================= -->
+  <g transform="translate(30, 60)">
+    <rect width="200" height="150" rx="12" fill="url(#cardBg)" stroke="#00f0ff" stroke-opacity="0.5" stroke-width="1.5"/>
+    <rect x="14" y="14" width="36" height="36" rx="8" fill="rgba(0, 240, 255, 0.15)"/>
+    <text x="32" y="38" font-size="18" text-anchor="middle">📱</text>
+    <text x="62" y="30" fill="#ffffff" font-family="'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="800">Mobile Phone</text>
+    <text x="62" y="45" fill="#38bdf8" font-family="'JetBrains Mono', monospace" font-size="10" font-weight="700">iOS / Android</text>
+
+    <line x1="14" y1="62" x2="186" y2="62" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+
+    <text x="16" y="85" fill="#94a3b8" font-family="'Segoe UI', sans-serif" font-size="11">&bull; Touch / Gyro POV Sensor</text>
+    <text x="16" y="105" fill="#94a3b8" font-family="'Segoe UI', sans-serif" font-size="11">&bull; WebSocket + UDP 9050</text>
+    <text x="16" y="125" fill="#00e676" font-family="'JetBrains Mono', monospace" font-size="10" font-weight="700">&bull; Latency: &lt; 2.0 ms</text>
+    <text x="16" y="142" fill="#ffd600" font-family="'JetBrains Mono', monospace" font-size="10">&bull; Speaker-Coil Haptics</text>
+  </g>
+
+  <!-- ================= Node 2: Go Backend Server ================= -->
+  <g transform="translate(370, 60)">
+    <rect width="200" height="150" rx="12" fill="url(#cardBg)" stroke="#38bdf8" stroke-opacity="0.5" stroke-width="1.5"/>
+    <rect x="14" y="14" width="36" height="36" rx="8" fill="rgba(56, 189, 248, 0.15)"/>
+    <text x="32" y="38" font-size="18" text-anchor="middle">⚡</text>
+    <text x="62" y="30" fill="#ffffff" font-family="'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="800">DualSense Server</text>
+    <text x="62" y="45" fill="#00e676" font-family="'JetBrains Mono', monospace" font-size="10" font-weight="700">Golang 1.20+ Engine</text>
+
+    <line x1="14" y1="62" x2="186" y2="62" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+
+    <text x="16" y="85" fill="#94a3b8" font-family="'Segoe UI', sans-serif" font-size="11">&bull; Zero-Alloc Binary Decoder</text>
+    <text x="16" y="105" fill="#94a3b8" font-family="'Segoe UI', sans-serif" font-size="11">&bull; 2-Player Slot Multiplexing</text>
+    <text x="16" y="125" fill="#94a3b8" font-family="'Segoe UI', sans-serif" font-size="11">&bull; Windows Mobile Hotspot</text>
+    <text x="16" y="142" fill="#38bdf8" font-family="'JetBrains Mono', monospace" font-size="10">&bull; Embedded Portable Web</text>
+  </g>
+
+  <!-- ================= Node 3: ViGEm Kernel Driver ================= -->
+  <g transform="translate(710, 60)">
+    <rect width="200" height="150" rx="12" fill="url(#cardBg)" stroke="#a855f7" stroke-opacity="0.5" stroke-width="1.5"/>
+    <rect x="14" y="14" width="36" height="36" rx="8" fill="rgba(168, 85, 247, 0.15)"/>
+    <text x="32" y="38" font-size="18" text-anchor="middle">🔌</text>
+    <text x="62" y="30" fill="#ffffff" font-family="'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="800">ViGEmBus Driver</text>
+    <text x="62" y="45" fill="#c084fc" font-family="'JetBrains Mono', monospace" font-size="10" font-weight="700">Windows Kernel Level</text>
+
+    <line x1="14" y1="62" x2="186" y2="62" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+
+    <text x="16" y="85" fill="#94a3b8" font-family="'Segoe UI', sans-serif" font-size="11">&bull; Native XInput / DirectInput</text>
+    <text x="16" y="105" fill="#94a3b8" font-family="'Segoe UI', sans-serif" font-size="11">&bull; Virtual Xbox 360 / DS4</text>
+    <text x="16" y="125" fill="#00e676" font-family="'JetBrains Mono', monospace" font-size="10" font-weight="700">&bull; 0ms Driver Overhead</text>
+    <text x="16" y="142" fill="#ff007f" font-family="'JetBrains Mono', monospace" font-size="10">&bull; Native Rumble Hooks</text>
+  </g>
+
+  <!-- ================= Node 4: Games & Emulators ================= -->
+  <g transform="translate(980, 75)">
+    <rect width="100" height="120" rx="10" fill="#0f172a" stroke="#00e676" stroke-width="1.5"/>
+    <text x="50" y="35" font-size="20" text-anchor="middle">🎮</text>
+    <text x="50" y="60" fill="#ffffff" font-family="'Segoe UI', sans-serif" font-size="12" font-weight="800" text-anchor="middle">PC GAMES</text>
+    <text x="50" y="80" fill="#94a3b8" font-family="'Segoe UI', sans-serif" font-size="10" text-anchor="middle">Steam / GamePass</text>
+    <text x="50" y="96" fill="#94a3b8" font-family="'Segoe UI', sans-serif" font-size="10" text-anchor="middle">Tekken / Forza</text>
+    <text x="50" y="112" fill="#00e676" font-family="'JetBrains Mono', monospace" font-size="9" font-weight="700" text-anchor="middle">RPCS3 / Yuzu</text>
+  </g>
+</svg>
