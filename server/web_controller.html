@@ -1933,9 +1933,21 @@
          ======================================================= -->
     <script>
         // Controller Configuration & State
+        const urlParams = new URLSearchParams(window.location.search);
+        let hasExplicitSlotFromURL = false;
+        let initialSlot = 1;
+        const paramSlot = urlParams.get('slot') || urlParams.get('player') || urlParams.get('p');
+        if (paramSlot === '2') {
+            initialSlot = 2;
+            hasExplicitSlotFromURL = true;
+        } else if (paramSlot === '1') {
+            initialSlot = 1;
+            hasExplicitSlotFromURL = true;
+        }
+
         const CONFIG = {
             profile: 'ps5', // 'ps5', 'xbox', 'fight'
-            slot: 1,
+            slot: initialSlot,
             deadzone: 0.05,
             stickSens: 1.0,
             hapticIntensity: 40, // 0=off, 20=med, 40=strong
@@ -1947,7 +1959,7 @@
         };
 
         const inputState = {
-            slot: 1,
+            slot: initialSlot,
             lx: 0,
             ly: 0,
             rx: 0,
@@ -2680,7 +2692,7 @@
         function connectWebSocket() {
             const host = window.location.host || '127.0.0.1:8080';
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            ws = new WebSocket(`${protocol}//${host}/ws`);
+            ws = new WebSocket(`${protocol}//${host}/ws?slot=${CONFIG.slot || 1}`);
             ws.binaryType = 'arraybuffer';
 
             ws.onopen = () => {
@@ -2691,6 +2703,17 @@
             ws.onmessage = (event) => {
                 if (event.data instanceof ArrayBuffer) {
                     const view = new DataView(event.data);
+
+                    // Server slot handshake: [0xFD, assignedSlot]
+                    if (view.byteLength >= 2 && view.getUint8(0) === 0xFD) {
+                        const assignedSlot = view.getUint8(1);
+                        if (!hasExplicitSlotFromURL && assignedSlot !== CONFIG.slot) {
+                            setSlot(assignedSlot, true);
+                        }
+                        return;
+                    }
+
+                    // Game rumble packet: [0xFE, largeMotor, smallMotor, slot]
                     if (view.byteLength >= 4 && view.getUint8(0) === 0xFE) {
                         const largeMotor = view.getUint8(1);
                         const smallMotor = view.getUint8(2);
@@ -3338,9 +3361,32 @@
             });
         }
 
-        // Player Slot Toggle (P1 / P2)
+        // Player Slot Management (P1 / P2)
         const btnSlot = document.getElementById('btnPlayerSlot');
         let lastSlotToggleTime = 0;
+
+        function setSlot(slotNum, showToastFlag = true) {
+            slotNum = (slotNum === 2) ? 2 : 1;
+            CONFIG.slot = slotNum;
+            inputState.slot = slotNum;
+            if (btnSlot) {
+                btnSlot.innerText = (slotNum === 2) ? '🎮 P2 • PLAYER 2' : '🎮 P1 • PLAYER 1';
+                btnSlot.classList.toggle('p2', slotNum === 2);
+            }
+            if (showToastFlag && typeof showProfileToast === 'function') {
+                showProfileToast(slotNum === 2 ? '🔴 Player 2 Active (Red Controller)' : '🔵 Player 1 Active (Blue Controller)');
+            }
+            // Send immediate input report with new slot
+            if (typeof sendInputReport === 'function') {
+                sendInputReport();
+            }
+        }
+
+        // Initialize button slot state on page load
+        if (btnSlot) {
+            btnSlot.innerText = (CONFIG.slot === 2) ? '🎮 P2 • PLAYER 2' : '🎮 P1 • PLAYER 1';
+            btnSlot.classList.toggle('p2', CONFIG.slot === 2);
+        }
 
         function togglePlayerSlot(e) {
             if (e) {
@@ -3352,21 +3398,9 @@
             lastSlotToggleTime = now;
 
             const nextSlot = (CONFIG.slot === 1) ? 2 : 1;
-            CONFIG.slot = nextSlot;
-            inputState.slot = nextSlot;
-
-            if (btnSlot) {
-                btnSlot.innerText = `🎮 P${nextSlot}`;
-                if (nextSlot === 2) {
-                    btnSlot.classList.add('p2');
-                } else {
-                    btnSlot.classList.remove('p2');
-                }
-            }
+            hasExplicitSlotFromURL = true; // User intentionally selected slot
+            setSlot(nextSlot, true);
             haptic(40);
-            if (typeof showProfileToast === 'function') {
-                showProfileToast(`🎮 Player ${nextSlot} Active (Slot ${nextSlot})`);
-            }
             if (window.ProfileManager && typeof window.ProfileManager.autoSync === 'function') {
                 window.ProfileManager.autoSync();
             }
@@ -3931,14 +3965,9 @@
                 setProfile(state.consoleProfile);
             }
 
-            // 2. Player Slot
-            if (state.slot) {
-                CONFIG.slot = state.slot;
-                inputState.slot = state.slot;
-                if (btnSlot) {
-                    btnSlot.innerText = `🎮 P${state.slot}`;
-                    btnSlot.classList.toggle('p2', state.slot === 2);
-                }
+            // 2. Player Slot (respect URL slot parameter if provided)
+            if (state.slot && !hasExplicitSlotFromURL) {
+                setSlot(state.slot, false);
             }
 
             // 3. Global Scale

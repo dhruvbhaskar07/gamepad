@@ -40,7 +40,14 @@ func (app *ServerApp) startUDPListener() {
 			if n >= 10 {
 				btnMask |= uint32(binary.LittleEndian.Uint16(data[8:10])) << 16
 			}
-			pad := app.getPlayerSlot(1)
+			slotNum := 1
+			if n >= 11 {
+				s := int(data[10])
+				if s == 2 {
+					slotNum = 2
+				}
+			}
+			pad := app.getPlayerSlot(slotNum)
 			if pad != nil {
 				pad.UpdateState(lx, ly, rx, ry, l2, r2, btnMask)
 			}

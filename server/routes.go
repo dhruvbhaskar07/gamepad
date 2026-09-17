@@ -44,6 +44,20 @@ func (app *ServerApp) setupRoutes() http.Handler {
 		serveWebController(w, r)
 	})
 
+	// Convenient Shortcuts for 2-Player Gaming
+	mux.HandleFunc("/p1", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/controller?slot=1", http.StatusFound)
+	})
+	mux.HandleFunc("/controller/1", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/controller?slot=1", http.StatusFound)
+	})
+	mux.HandleFunc("/p2", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/controller?slot=2", http.StatusFound)
+	})
+	mux.HandleFunc("/controller/2", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/controller?slot=2", http.StatusFound)
+	})
+
 	// Dedicated Desktop Dashboard Page
 	mux.HandleFunc("/dashboard", func(w http.ResponseWriter, r *http.Request) {
 		serveDashboard(w, r)
@@ -54,6 +68,25 @@ func (app *ServerApp) setupRoutes() http.Handler {
 	if _, err := os.Stat(webDir); err == nil {
 		mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(webDir))))
 	}
+
+	// Slot Assignment Recommendation API
+	mux.HandleFunc("/api/assign_slot", func(w http.ResponseWriter, r *http.Request) {
+		app.mu.Lock()
+		p1Active := app.p1Connected && time.Since(app.p1LastSeen) < 5*time.Second
+		p2Active := app.p2Connected && time.Since(app.p2LastSeen) < 5*time.Second
+		rec := 1
+		if p1Active && !p2Active {
+			rec = 2
+		}
+		app.mu.Unlock()
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"recommended_slot": rec,
+			"p1_active":        p1Active,
+			"p2_active":        p2Active,
+		})
+	})
 
 	// Status API
 	mux.HandleFunc("/api/status", func(w http.ResponseWriter, r *http.Request) {
@@ -66,6 +99,7 @@ func (app *ServerApp) setupRoutes() http.Handler {
 			"http_port":        HTTP_PORT,
 			"udp_port":         UDP_PORT,
 			"vigem_loaded":     app.driver != nil,
+			"controller_type":  app.config.ControllerType,
 			"p1_connected":     p1Active,
 			"p1_ip":            app.p1IP,
 			"p1_ua":            app.p1UA,

@@ -886,10 +886,11 @@
 
         <!-- 2. ACTIVE PAIRING SECTION (Shown when Hotspot is ON or Start clicked) -->
         <div id="activePairingSection" style="display: none;">
-          <!-- Tabs for Wi-Fi Join QR vs Gamepad Link QR -->
+          <!-- Tabs for Wi-Fi Join QR vs Player 1 vs Player 2 Link QR -->
           <div class="qr-mode-tabs">
-            <button class="qr-tab active" id="tabWifiQR">📶 1-Tap Wi-Fi Join</button>
-            <button class="qr-tab" id="tabGamepadQR">🌐 Gamepad Link</button>
+            <button class="qr-tab active" id="tabWifiQR">📶 Wi-Fi Hotspot</button>
+            <button class="qr-tab" id="tabP1QR">🎮 Player 1 (Blue)</button>
+            <button class="qr-tab" id="tabP2QR">🎮 Player 2 (Red)</button>
           </div>
 
           <!-- Dynamic QR Container -->
@@ -913,16 +914,21 @@
               <span class="cred-val" id="dispPass">12345678</span>
             </div>
             <div class="cred-row">
-              <span class="cred-label">🌐 GAMEPAD URL:</span>
-              <span class="cred-val" id="dispUrl">http://192.168.137.1:8080</span>
+              <span class="cred-label">🎮 PLAYER 1 (P1):</span>
+              <span class="cred-val" id="dispP1Url" style="color: var(--cyan);">http://192.168.137.1:8080/controller?slot=1</span>
+            </div>
+            <div class="cred-row">
+              <span class="cred-label">🎮 PLAYER 2 (P2):</span>
+              <span class="cred-val" id="dispP2Url" style="color: #ff0055;">http://192.168.137.1:8080/controller?slot=2</span>
             </div>
           </div>
 
           <!-- Quick Manual / Fallback Guide -->
           <div style="background: rgba(255, 255, 255, 0.04); border: 1px dashed rgba(255, 255, 255, 0.15); border-radius: 10px; padding: 10px 12px; font-size: 11px; color: var(--text-muted); line-height: 1.5; margin-bottom: 14px;">
-            💡 <b>Agar Camera Scan na kare:</b><br>
-            1. Phone Settings &rarr; Wi-Fi &rarr; Connect to <b>"dpc"</b> (Password: <b>12345678</b>)<br>
-            2. Phone ke Chrome ya Safari me open karein: <b style="color: var(--cyan);">http://192.168.137.1:8080</b>
+            🎮 <b>2 Players Ek Saath Kese Khele:</b><br>
+            1. <b>Phone 1:</b> "Player 1" QR scan karein ya open karein: <b style="color: var(--cyan);">/controller?slot=1</b><br>
+            2. <b>Phone 2:</b> "Player 2" QR scan karein ya open karein: <b style="color: #ff0055;">/controller?slot=2</b><br>
+            3. Windows me Gamepad #1 aur Gamepad #2 alag-alag register honge aur bilkul separate chalenge!
           </div>
 
           <!-- Phone Connected Alert Toast -->
@@ -933,11 +939,17 @@
           <!-- Hotspot Footer Actions -->
           <div class="hotspot-footer-actions">
             <button class="btn" id="btnStopHotspot">⏹️ Stop Hotspot</button>
-            <button class="btn btn-primary" id="btnCopyGamepadUrl">📋 Copy URL</button>
+            <button class="btn btn-primary" id="btnCopyActiveUrl">📋 Copy Active Link</button>
           </div>
-          <div style="margin-top: 10px; display: flex; justify-content: center;">
-            <button class="btn" id="btnHotspotSettings" style="font-size: 11px; padding: 5px 12px;">
-              ⚙️ Windows Hotspot Settings
+          <div style="margin-top: 10px; display: flex; justify-content: center; gap: 8px;">
+            <button class="btn" id="btnCopyP1Url" style="font-size: 11px; padding: 5px 10px; border-color: var(--cyan); color: var(--cyan);">
+              📋 Copy P1 Link
+            </button>
+            <button class="btn" id="btnCopyP2Url" style="font-size: 11px; padding: 5px 10px; border-color: #ff0055; color: #ff0055;">
+              📋 Copy P2 Link
+            </button>
+            <button class="btn" id="btnHotspotSettings" style="font-size: 11px; padding: 5px 10px;">
+              ⚙️ Windows Hotspot
             </button>
           </div>
         </div>
@@ -1060,7 +1072,7 @@
         <div class="card-header">
           <div class="card-title">
             <svg viewBox="0 0 24 24"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4-3c-.83 0-1.5-.67-1.5-1.5S18.67 9 19.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
-            Live Controller Input Visualizer (Player 1)
+            Live Controller Input Visualizer (<span id="vizPlayerSlot" style="color: var(--cyan); font-weight: 800;">Player 1</span>)
           </div>
           <span style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);">
             Real-time Direct XInput Feed
@@ -1190,6 +1202,17 @@
               </label>
             </div>
             <span class="setting-desc">Relay live PC game rumble directly to phone motor & audio.</span>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-header">
+              <span class="setting-title">Virtual Controller Output</span>
+            </div>
+            <select id="selControllerType" style="background: rgba(0,0,0,0.5); border: 1px solid var(--panel-border); color: #fff; padding: 6px 10px; border-radius: 8px; font-size: 12px; outline: none; margin-top: 4px; font-family: inherit;">
+              <option value="x360">Xbox 360 (Universal XInput - Recommended for All PC Games)</option>
+              <option value="ds4">DualShock 4 (DirectInput)</option>
+            </select>
+            <span class="setting-desc">Each player slot gets strictly 1 virtual controller on Windows.</span>
           </div>
         </div>
       </div>
@@ -1689,7 +1712,7 @@
       wifi_qr: '',
       gamepad_url: ''
     };
-    let currentQRMode = 'wifi'; // 'wifi' or 'gamepad'
+    let currentQRMode = 'p1'; // 'wifi', 'p1', or 'p2'
 
     // DOM Elements
     const qrCanvas = document.getElementById('qrCanvas');
@@ -1699,15 +1722,20 @@
     const btnBigStart = document.getElementById('btnBigStart');
     const linkDirectWifi = document.getElementById('linkDirectWifi');
     const tabWifiQR = document.getElementById('tabWifiQR');
-    const tabGamepadQR = document.getElementById('tabGamepadQR');
+    const tabP1QR = document.getElementById('tabP1QR');
+    const tabP2QR = document.getElementById('tabP2QR');
     const qrModeInfo = document.getElementById('qrModeInfo');
     const dispSsid = document.getElementById('dispSsid');
     const dispPass = document.getElementById('dispPass');
-    const dispUrl = document.getElementById('dispUrl');
+    const dispP1Url = document.getElementById('dispP1Url');
+    const dispP2Url = document.getElementById('dispP2Url');
     const phoneConnectedToast = document.getElementById('phoneConnectedToast');
     const btnStopHotspot = document.getElementById('btnStopHotspot');
-    const btnCopyGamepadUrl = document.getElementById('btnCopyGamepadUrl');
+    const btnCopyActiveUrl = document.getElementById('btnCopyActiveUrl');
+    const btnCopyP1Url = document.getElementById('btnCopyP1Url');
+    const btnCopyP2Url = document.getElementById('btnCopyP2Url');
     const btnHotspotSettings = document.getElementById('btnHotspotSettings');
+    const selControllerType = document.getElementById('selControllerType');
 
     const ipBadgeText = document.getElementById('ipText');
     const btnJoyCpl = document.getElementById('btnJoyCpl');
@@ -1733,21 +1761,39 @@
       15: document.getElementById('vBtnRight')
     };
 
+    function getP1Url() {
+      const host = (hotspotData && hotspotData.state === 'On' && hotspotData.hotspot_ip) ? hotspotData.hotspot_ip : serverIP;
+      return `http://${host}:${httpPort}/controller?slot=1`;
+    }
+
+    function getP2Url() {
+      const host = (hotspotData && hotspotData.state === 'On' && hotspotData.hotspot_ip) ? hotspotData.hotspot_ip : serverIP;
+      return `http://${host}:${httpPort}/controller?slot=2`;
+    }
+
     function renderCurrentQR() {
+      if (tabWifiQR) tabWifiQR.classList.toggle('active', currentQRMode === 'wifi');
+      if (tabP1QR) tabP1QR.classList.toggle('active', currentQRMode === 'p1');
+      if (tabP2QR) tabP2QR.classList.toggle('active', currentQRMode === 'p2');
+
       if (currentQRMode === 'wifi' && hotspotData.wifi_qr) {
-        tabWifiQR.classList.add('active');
-        tabGamepadQR.classList.remove('active');
         qrModeInfo.innerHTML = `📷 Point phone camera at QR &rarr; Tap <b>"Join Network"</b>. Phone connects to laptop hotspot automatically!`;
         try {
           window.renderQRCode(qrCanvas, hotspotData.wifi_qr);
         } catch (e) {
           console.error("QR render error", e);
         }
+      } else if (currentQRMode === 'p2') {
+        const url = getP2Url();
+        qrModeInfo.innerHTML = `🎮 Point <b>Phone 2</b> at QR &rarr; Tap link to join as <b style="color: #ff0055;">Player 2 (Red)</b>!`;
+        try {
+          window.renderQRCode(qrCanvas, url);
+        } catch (e) {
+          console.error("QR render error", e);
+        }
       } else {
-        tabWifiQR.classList.remove('active');
-        tabGamepadQR.classList.add('active');
-        const url = hotspotData.gamepad_url || `http://${serverIP}:${httpPort}`;
-        qrModeInfo.innerHTML = `🌐 Point phone camera at QR &rarr; Tap link to open <b>DualSense Controller</b> in browser!`;
+        const url = getP1Url();
+        qrModeInfo.innerHTML = `🎮 Point <b>Phone 1</b> at QR &rarr; Tap link to join as <b style="color: var(--cyan);">Player 1 (Blue)</b>!`;
         try {
           window.renderQRCode(qrCanvas, url);
         } catch (e) {
@@ -1781,22 +1827,31 @@
     // Direct Wi-Fi link bypass (for home router Wi-Fi)
     linkDirectWifi.addEventListener('click', (e) => {
       e.preventDefault();
-      currentQRMode = 'gamepad';
+      currentQRMode = 'p1';
       startHeroSection.style.display = 'none';
       activePairingSection.style.display = 'block';
       renderCurrentQR();
     });
 
     // Tab Switching
-    tabWifiQR.addEventListener('click', () => {
-      currentQRMode = 'wifi';
-      renderCurrentQR();
-    });
-
-    tabGamepadQR.addEventListener('click', () => {
-      currentQRMode = 'gamepad';
-      renderCurrentQR();
-    });
+    if (tabWifiQR) {
+      tabWifiQR.addEventListener('click', () => {
+        currentQRMode = 'wifi';
+        renderCurrentQR();
+      });
+    }
+    if (tabP1QR) {
+      tabP1QR.addEventListener('click', () => {
+        currentQRMode = 'p1';
+        renderCurrentQR();
+      });
+    }
+    if (tabP2QR) {
+      tabP2QR.addEventListener('click', () => {
+        currentQRMode = 'p2';
+        renderCurrentQR();
+      });
+    }
 
     // Stop Hotspot
     btnStopHotspot.addEventListener('click', async () => {
@@ -1817,14 +1872,28 @@
       }
     });
 
-    // Copy Gamepad URL
-    btnCopyGamepadUrl.addEventListener('click', () => {
-      const url = dispUrl.textContent;
-      navigator.clipboard.writeText(url);
-      const prev = btnCopyGamepadUrl.textContent;
-      btnCopyGamepadUrl.textContent = 'Copied! ✓';
-      setTimeout(() => { btnCopyGamepadUrl.textContent = prev; }, 1800);
-    });
+    function copyTextWithFeedback(btn, text) {
+      if (!text) return;
+      navigator.clipboard.writeText(text);
+      const prev = btn.textContent;
+      btn.textContent = 'Copied! ✓';
+      setTimeout(() => { btn.textContent = prev; }, 1800);
+    }
+
+    if (btnCopyActiveUrl) {
+      btnCopyActiveUrl.addEventListener('click', () => {
+        let url = getP1Url();
+        if (currentQRMode === 'p2') url = getP2Url();
+        else if (currentQRMode === 'wifi' && hotspotData.wifi_qr) url = hotspotData.wifi_qr;
+        copyTextWithFeedback(btnCopyActiveUrl, url);
+      });
+    }
+    if (btnCopyP1Url) {
+      btnCopyP1Url.addEventListener('click', () => copyTextWithFeedback(btnCopyP1Url, getP1Url()));
+    }
+    if (btnCopyP2Url) {
+      btnCopyP2Url.addEventListener('click', () => copyTextWithFeedback(btnCopyP2Url, getP2Url()));
+    }
 
     btnHotspotSettings.addEventListener('click', () => {
       fetch('/api/hotspot/settings', { method: 'POST' });
@@ -1841,7 +1910,8 @@
     function updateHotspotUI() {
       dispSsid.textContent = hotspotData.ssid || 'dpc';
       dispPass.textContent = hotspotData.passphrase || '12345678';
-      dispUrl.textContent = hotspotData.gamepad_url || `http://${serverIP}:${httpPort}`;
+      if (dispP1Url) dispP1Url.textContent = getP1Url();
+      if (dispP2Url) dispP2Url.textContent = getP2Url();
 
       if (hotspotData.state === 'On') {
         startHeroSection.style.display = 'none';
@@ -1873,6 +1943,10 @@
           httpPort = s.http_port;
 
           ipBadgeText.textContent = `${serverIP}:${httpPort}`;
+
+          // Update P1 / P2 display URLs
+          if (dispP1Url) dispP1Url.textContent = getP1Url();
+          if (dispP2Url) dispP2Url.textContent = getP2Url();
 
           // Player 1 Status
           const p1Card = document.getElementById('p1Card');
@@ -1960,6 +2034,16 @@
           return;
         }
 
+        // Show which player slot sent this packet
+        if (view.length >= 11) {
+          const packetSlot = view[10] || 1;
+          const vizSlot = document.getElementById('vizPlayerSlot');
+          if (vizSlot) {
+            vizSlot.textContent = (packetSlot === 2) ? 'Player 2 (Red)' : 'Player 1 (Blue)';
+            vizSlot.style.color = (packetSlot === 2) ? '#ff0055' : 'var(--cyan)';
+          }
+        }
+
         // Joystick positions
         const lx = ((view[0] - 128) / 127) * 15;
         const ly = ((view[1] - 128) / 127) * 15;
@@ -2003,6 +2087,9 @@
           document.getElementById('chkAutoHotspot').checked = !!cfg.auto_hotspot;
           document.getElementById('chkMinimizeTray').checked = cfg.minimize_tray !== false;
           document.getElementById('chkVibration').checked = cfg.vibration_enabled !== false;
+          if (selControllerType && cfg.controller_type) {
+            selControllerType.value = cfg.controller_type;
+          }
         }
       } catch(e) {}
     }
@@ -2012,7 +2099,8 @@
         auto_start: document.getElementById('chkAutoStart').checked,
         auto_hotspot: document.getElementById('chkAutoHotspot').checked,
         minimize_tray: document.getElementById('chkMinimizeTray').checked,
-        vibration_enabled: document.getElementById('chkVibration').checked
+        vibration_enabled: document.getElementById('chkVibration').checked,
+        controller_type: selControllerType ? selControllerType.value : 'x360'
       };
       try {
         const res = await fetch('/api/settings', {
@@ -2025,7 +2113,7 @@
           setTimeout(() => { btnSaveSettings.textContent = 'Save Preferences'; }, 2000);
         }
       } catch(e) {
-        alert('Failed to save settings: ' + e);
+        alert('Could not save settings: ' + e);
       }
     });
 

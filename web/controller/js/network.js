@@ -5,6 +5,8 @@ export class NetworkClient {
     constructor(options = {}) {
         this.onStatusChange = options.onStatusChange || (() => {});
         this.onRumble = options.onRumble || (() => {});
+        this.onSlotAssigned = options.onSlotAssigned || (() => {});
+        this.slot = options.slot || 1;
         this.ws = null;
         this.isConnected = false;
         this.reconnectTimer = null;
@@ -17,7 +19,7 @@ export class NetworkClient {
 
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const host = window.location.host || 'localhost:8080';
-        const wsUrl = `${protocol}//${host}/ws`;
+        const wsUrl = `${protocol}//${host}/ws?slot=${this.slot || 1}`;
 
         try {
             this.ws = new WebSocket(wsUrl);
@@ -42,6 +44,15 @@ export class NetworkClient {
             this.ws.onmessage = (event) => {
                 if (event.data instanceof ArrayBuffer) {
                     const view = new DataView(event.data);
+
+                    // Handshake assigned slot packet: [0xFD, assignedSlot]
+                    if (view.byteLength >= 2 && view.getUint8(0) === 0xFD) {
+                        const assignedSlot = view.getUint8(1);
+                        this.slot = assignedSlot;
+                        this.onSlotAssigned(assignedSlot);
+                        return;
+                    }
+
                     // Check magic rumble packet: [0xFE, largeMotor, smallMotor, slot]
                     if (view.byteLength >= 4 && view.getUint8(0) === 0xFE) {
                         const largeMotor = view.getUint8(1);

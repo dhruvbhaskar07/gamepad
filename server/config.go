@@ -12,10 +12,11 @@ import (
 
 // AppConfig defines server configuration options
 type AppConfig struct {
-	AutoStart        bool `json:"auto_start"`
-	AutoHotspot      bool `json:"auto_hotspot"`
-	MinimizeTray     bool `json:"minimize_tray"`
-	VibrationEnabled bool `json:"vibration_enabled"`
+	AutoStart        bool   `json:"auto_start"`
+	AutoHotspot      bool   `json:"auto_hotspot"`
+	MinimizeTray     bool   `json:"minimize_tray"`
+	VibrationEnabled bool   `json:"vibration_enabled"`
+	ControllerType   string `json:"controller_type"` // "x360" (default) or "ds4"
 }
 
 // resolveDLLPath locates the ViGEmClient.dll driver
@@ -93,6 +94,7 @@ func loadConfig() AppConfig {
 		AutoHotspot:      false,
 		MinimizeTray:     true,
 		VibrationEnabled: true,
+		ControllerType:   "x360",
 	}
 	exePath, err := os.Executable()
 	configPath := "config.json"
@@ -103,6 +105,9 @@ func loadConfig() AppConfig {
 	data, err := os.ReadFile(configPath)
 	if err == nil {
 		json.Unmarshal(data, &cfg)
+	}
+	if cfg.ControllerType == "" {
+		cfg.ControllerType = "x360"
 	}
 	return cfg
 }

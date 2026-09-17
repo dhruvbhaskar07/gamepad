@@ -100,6 +100,7 @@ type ViGEmDriver struct {
 
 type DualGamepadSlot struct {
 	driver     *ViGEmDriver
+	targetType string
 	x360Target uintptr
 	ds4Target  uintptr
 	x360Report XusbReport
@@ -178,63 +179,65 @@ func NewViGEmDriver(dllPath string) (*ViGEmDriver, error) {
 	}, nil
 }
 
-// CreateDualGamepad creates both Xbox 360 and DS4 for maximum compatibility
-func (d *ViGEmDriver) CreateDualGamepad() (*DualGamepadSlot, error) {
+// CreateGamepad creates strictly ONE virtual controller target (Xbox 360 or DS4) for a clean 1:1 mapping
+func (d *ViGEmDriver) CreateGamepad(targetType string) (*DualGamepadSlot, error) {
 	initRumbleCallbacks()
-
-	x360, _, _ := d.vigemTargetX360Alloc.Call()
-	if x360 == 0 {
-		return nil, fmt.Errorf("vigem_target_x360_alloc failed")
-	}
-
-	ret, _, _ := d.vigemTargetAdd.Call(d.client, x360)
-	if ret != VIGEM_ERROR_NONE {
-		d.vigemTargetFree.Call(x360)
-		return nil, fmt.Errorf("failed to plug in Xbox 360 target: 0x%X", ret)
-	}
-
-	ds4, _, _ := d.vigemTargetDS4Alloc.Call()
-	if ds4 != 0 {
-		retDs4, _, _ := d.vigemTargetAdd.Call(d.client, ds4)
-		if retDs4 != VIGEM_ERROR_NONE {
-			d.vigemTargetFree.Call(ds4)
-			ds4 = 0
-		}
-	}
 
 	slot := &DualGamepadSlot{
 		driver:     d,
-		x360Target: x360,
-		ds4Target:  ds4,
+		targetType: targetType,
 	}
 
-	slotRegistryMu.Lock()
-	slotRegistry[x360] = slot
-	if ds4 != 0 {
+	if targetType == "ds4" {
+		ds4, _, _ := d.vigemTargetDS4Alloc.Call()
+		if ds4 == 0 {
+			return nil, fmt.Errorf("vigem_target_ds4_alloc failed")
+		}
+		retDs4, _, _ := d.vigemTargetAdd.Call(d.client, ds4)
+		if retDs4 != VIGEM_ERROR_NONE {
+			d.vigemTargetFree.Call(ds4)
+			return nil, fmt.Errorf("failed to plug in DS4 target: 0x%X", retDs4)
+		}
+		slot.ds4Target = ds4
+		slotRegistryMu.Lock()
 		slotRegistry[ds4] = slot
-	}
-	slotRegistryMu.Unlock()
-
-	// Register vibration/rumble notifications with ViGEmBus
-	d.vigemTargetX360RegNotif.Call(d.client, x360, x360RumbleCallback, 0)
-	if ds4 != 0 {
+		slotRegistryMu.Unlock()
 		d.vigemTargetDS4RegNotif.Call(d.client, ds4, ds4RumbleCallback, 0)
+
+		slot.ds4Report.WButtons = (slot.ds4Report.WButtons &^ 0xF) | DS4_BUTTON_DPAD_NONE
+		slot.ds4Report.BThumbLX = 128
+		slot.ds4Report.BThumbLY = 128
+		slot.ds4Report.BThumbRX = 128
+		slot.ds4Report.BThumbRY = 128
+	} else {
+		x360, _, _ := d.vigemTargetX360Alloc.Call()
+		if x360 == 0 {
+			return nil, fmt.Errorf("vigem_target_x360_alloc failed")
+		}
+		ret, _, _ := d.vigemTargetAdd.Call(d.client, x360)
+		if ret != VIGEM_ERROR_NONE {
+			d.vigemTargetFree.Call(x360)
+			return nil, fmt.Errorf("failed to plug in Xbox 360 target: 0x%X", ret)
+		}
+		slot.x360Target = x360
+		slotRegistryMu.Lock()
+		slotRegistry[x360] = slot
+		slotRegistryMu.Unlock()
+		d.vigemTargetX360RegNotif.Call(d.client, x360, x360RumbleCallback, 0)
+
+		// Pulse button once so Windows & Chrome register the gamepad immediately
+		slot.x360Report.WButtons = XUSB_GAMEPAD_A
+		slot.Update()
+		slot.x360Report.WButtons = 0
+		slot.Update()
 	}
-
-	// Initialize DS4 D-Pad to Neutral
-	slot.ds4Report.WButtons = (slot.ds4Report.WButtons &^ 0xF) | DS4_BUTTON_DPAD_NONE
-	slot.ds4Report.BThumbLX = 128
-	slot.ds4Report.BThumbLY = 128
-	slot.ds4Report.BThumbRX = 128
-	slot.ds4Report.BThumbRY = 128
-
-	// Pulse button once so Windows & Chrome register the gamepad immediately
-	slot.x360Report.WButtons = XUSB_GAMEPAD_A
-	slot.Update()
-	slot.x360Report.WButtons = 0
-	slot.Update()
 
 	return slot, nil
+}
+
+// CreateDualGamepad maintains backward compatibility by allocating an Xbox 360 gamepad
+func (d *ViGEmDriver) CreateDualGamepad() (*DualGamepadSlot, error) {
+	return d.CreateGamepad("x360")
 }
 
 // UpdateState processes analog axes (normalized -1.0 to 1.0), triggers (0..255), and 32-bit button mask
@@ -261,68 +264,70 @@ func (slot *DualGamepadSlot) UpdateState(lx, ly, rx, ry float32, l2, r2 uint8, b
 		ry = 1.0
 	}
 
-	// 1. UPDATE XBOX 360 REPORT
-	slot.x360Report.SThumbLX = int16(lx * 32767.0)
-	slot.x360Report.SThumbLY = int16(-ly * 32767.0) // Invert Y for Windows standard
-	slot.x360Report.SThumbRX = int16(rx * 32767.0)
-	slot.x360Report.SThumbRY = int16(-ry * 32767.0)
-	slot.x360Report.BLeftTrigger = l2
-	slot.x360Report.BRightTrigger = r2
+	// 1. UPDATE XBOX 360 REPORT (if active)
+	if slot.x360Target != 0 {
+		slot.x360Report.SThumbLX = int16(lx * 32767.0)
+		slot.x360Report.SThumbLY = int16(-ly * 32767.0) // Invert Y for Windows standard
+		slot.x360Report.SThumbRX = int16(rx * 32767.0)
+		slot.x360Report.SThumbRY = int16(-ry * 32767.0)
+		slot.x360Report.BLeftTrigger = l2
+		slot.x360Report.BRightTrigger = r2
 
-	var xBtns uint16 = 0
-	if btnMask&(1<<0) != 0 {
-		xBtns |= XUSB_GAMEPAD_A
+		var xBtns uint16 = 0
+		if btnMask&(1<<0) != 0 {
+			xBtns |= XUSB_GAMEPAD_A
+		}
+		if btnMask&(1<<1) != 0 {
+			xBtns |= XUSB_GAMEPAD_B
+		}
+		if btnMask&(1<<2) != 0 {
+			xBtns |= XUSB_GAMEPAD_X
+		}
+		if btnMask&(1<<3) != 0 {
+			xBtns |= XUSB_GAMEPAD_Y
+		}
+		if btnMask&(1<<4) != 0 {
+			xBtns |= XUSB_GAMEPAD_LEFT_SHOULDER
+		}
+		if btnMask&(1<<5) != 0 {
+			xBtns |= XUSB_GAMEPAD_RIGHT_SHOULDER
+		}
+		if btnMask&(1<<6) != 0 {
+			xBtns |= XUSB_GAMEPAD_BACK
+		}
+		if btnMask&(1<<7) != 0 {
+			xBtns |= XUSB_GAMEPAD_START
+		}
+		if btnMask&(1<<8) != 0 {
+			xBtns |= XUSB_GAMEPAD_LEFT_THUMB
+		}
+		if btnMask&(1<<9) != 0 {
+			xBtns |= XUSB_GAMEPAD_RIGHT_THUMB
+		}
+		if btnMask&(1<<10) != 0 {
+			xBtns |= XUSB_GAMEPAD_GUIDE
+		}
+		if btnMask&(1<<12) != 0 {
+			xBtns |= XUSB_GAMEPAD_DPAD_UP
+		}
+		if btnMask&(1<<13) != 0 {
+			xBtns |= XUSB_GAMEPAD_DPAD_DOWN
+		}
+		if btnMask&(1<<14) != 0 {
+			xBtns |= XUSB_GAMEPAD_DPAD_LEFT
+		}
+		if btnMask&(1<<15) != 0 {
+			xBtns |= XUSB_GAMEPAD_DPAD_RIGHT
+		}
+		// Pro Paddles M1 & M2 (mapped to L3 / R3)
+		if btnMask&(1<<16) != 0 {
+			xBtns |= XUSB_GAMEPAD_LEFT_THUMB
+		}
+		if btnMask&(1<<17) != 0 {
+			xBtns |= XUSB_GAMEPAD_RIGHT_THUMB
+		}
+		slot.x360Report.WButtons = xBtns
 	}
-	if btnMask&(1<<1) != 0 {
-		xBtns |= XUSB_GAMEPAD_B
-	}
-	if btnMask&(1<<2) != 0 {
-		xBtns |= XUSB_GAMEPAD_X
-	}
-	if btnMask&(1<<3) != 0 {
-		xBtns |= XUSB_GAMEPAD_Y
-	}
-	if btnMask&(1<<4) != 0 {
-		xBtns |= XUSB_GAMEPAD_LEFT_SHOULDER
-	}
-	if btnMask&(1<<5) != 0 {
-		xBtns |= XUSB_GAMEPAD_RIGHT_SHOULDER
-	}
-	if btnMask&(1<<6) != 0 {
-		xBtns |= XUSB_GAMEPAD_BACK
-	}
-	if btnMask&(1<<7) != 0 {
-		xBtns |= XUSB_GAMEPAD_START
-	}
-	if btnMask&(1<<8) != 0 {
-		xBtns |= XUSB_GAMEPAD_LEFT_THUMB
-	}
-	if btnMask&(1<<9) != 0 {
-		xBtns |= XUSB_GAMEPAD_RIGHT_THUMB
-	}
-	if btnMask&(1<<10) != 0 {
-		xBtns |= XUSB_GAMEPAD_GUIDE
-	}
-	if btnMask&(1<<12) != 0 {
-		xBtns |= XUSB_GAMEPAD_DPAD_UP
-	}
-	if btnMask&(1<<13) != 0 {
-		xBtns |= XUSB_GAMEPAD_DPAD_DOWN
-	}
-	if btnMask&(1<<14) != 0 {
-		xBtns |= XUSB_GAMEPAD_DPAD_LEFT
-	}
-	if btnMask&(1<<15) != 0 {
-		xBtns |= XUSB_GAMEPAD_DPAD_RIGHT
-	}
-	// Pro Paddles M1 & M2 (mapped to L3 / R3)
-	if btnMask&(1<<16) != 0 {
-		xBtns |= XUSB_GAMEPAD_LEFT_THUMB
-	}
-	if btnMask&(1<<17) != 0 {
-		xBtns |= XUSB_GAMEPAD_RIGHT_THUMB
-	}
-	slot.x360Report.WButtons = xBtns
 
 	// 2. UPDATE DUALSHOCK 4 REPORT (if available)
 	if slot.ds4Target != 0 {
@@ -434,7 +439,24 @@ func (slot *DualGamepadSlot) SetRumbleCallback(cb func(largeMotor, smallMotor ui
 	slot.onRumble = cb
 }
 
+func (slot *DualGamepadSlot) ResetToNeutral() error {
+	if slot.x360Target != 0 {
+		slot.x360Report = XusbReport{}
+	}
+	if slot.ds4Target != 0 {
+		slot.ds4Report = Ds4Report{
+			BThumbLX: 128,
+			BThumbLY: 128,
+			BThumbRX: 128,
+			BThumbRY: 128,
+			WButtons: DS4_BUTTON_DPAD_NONE,
+		}
+	}
+	return slot.Update()
+}
+
 func (slot *DualGamepadSlot) Close() {
+	slot.ResetToNeutral()
 	if slot.x360Target != 0 {
 		slot.driver.vigemTargetX360UnregNotif.Call(slot.x360Target)
 		slot.driver.vigemTargetRemove.Call(slot.driver.client, slot.x360Target)

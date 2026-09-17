@@ -79,7 +79,7 @@ func main() {
 		fmt.Printf("[VIGEM WARNING] Driver failed to load: %v\n", err)
 	} else {
 		app.driver = driver
-		p1, err := driver.CreateDualGamepad()
+		p1, err := driver.CreateGamepad(app.config.ControllerType)
 		if err != nil {
 			fmt.Printf("[VIGEM WARNING] Failed to create Player 1 gamepad: %v\n", err)
 		} else {
@@ -89,7 +89,7 @@ func main() {
 				}
 			})
 			app.p1Gamepad = p1
-			fmt.Println("[VIGEM] 🟢 Player 1 Virtual Controller is ACTIVE with Live Game Rumble Feedback")
+			fmt.Printf("[VIGEM] 🟢 Player 1 Virtual Controller (%s) is ACTIVE with Live Game Rumble Feedback\n", app.config.ControllerType)
 		}
 	}
 
@@ -203,7 +203,7 @@ func (app *ServerApp) getPlayerSlot(slotNum int) *DualGamepadSlot {
 
 	if slotNum == 2 {
 		if app.p2Gamepad == nil && app.driver != nil {
-			p2, err := app.driver.CreateDualGamepad()
+			p2, err := app.driver.CreateGamepad(app.config.ControllerType)
 			if err == nil {
 				p2.SetRumbleCallback(func(largeMotor, smallMotor uint8) {
 					if app.config.VibrationEnabled {
@@ -211,7 +211,7 @@ func (app *ServerApp) getPlayerSlot(slotNum int) *DualGamepadSlot {
 					}
 				})
 				app.p2Gamepad = p2
-				fmt.Println("[VIGEM] 🔴 Player 2 Virtual Controller is ACTIVE")
+				fmt.Printf("[VIGEM] 🔴 Player 2 Virtual Controller (%s) is ACTIVE\n", app.config.ControllerType)
 			}
 		}
 		return app.p2Gamepad

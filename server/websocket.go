@@ -113,28 +113,58 @@ func (app *ServerApp) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	remoteAddr := conn.RemoteAddr().String()
 	isLocalDashboard := strings.HasPrefix(remoteAddr, "127.0.0.1") || strings.HasPrefix(remoteAddr, "[::1]")
 
+	// Slot Assignment: Check query param ?slot=1 or ?slot=2, or auto-assign Player 2 if Player 1 active
+	initialSlot := 1
+	slotParam := r.URL.Query().Get("slot")
+	if slotParam == "2" {
+		initialSlot = 2
+	} else if slotParam == "1" {
+		initialSlot = 1
+	} else if !isLocalDashboard {
+		app.mu.Lock()
+		p1Active := app.p1Connected && time.Since(app.p1LastSeen) < 5*time.Second
+		if p1Active {
+			initialSlot = 2 // Auto-assign Player 2 if Player 1 is already in an active session
+		}
+		app.mu.Unlock()
+	}
+
 	writer := &wsWriter{
 		conn:      conn,
 		isMonitor: isLocalDashboard,
 	}
 
 	app.wsClientsMu.Lock()
-	app.wsClients[writer] = 1
+	app.wsClients[writer] = initialSlot
 	app.wsClientsMu.Unlock()
+
+	// Ensure virtual controller is active on Windows for this slot
+	if !isLocalDashboard {
+		app.getPlayerSlot(initialSlot)
+	}
 
 	defer func() {
 		app.wsClientsMu.Lock()
+		assignedSlot := app.wsClients[writer]
 		delete(app.wsClients, writer)
 		app.wsClientsMu.Unlock()
 
 		app.mu.Lock()
-		if app.p1IP == remoteAddr {
+		switch assignedSlot {
+		case 1:
 			app.p1Connected = false
-		}
-		if app.p2IP == remoteAddr {
+		case 2:
 			app.p2Connected = false
 		}
 		app.mu.Unlock()
+
+		// Reset controller state so buttons/sticks don't get stuck in-game
+		if !isLocalDashboard {
+			pad := app.getPlayerSlot(assignedSlot)
+			if pad != nil {
+				pad.ResetToNeutral()
+			}
+		}
 
 		conn.Close()
 	}()
@@ -144,7 +174,13 @@ func (app *ServerApp) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	bufrw.WriteString("\r\n\r\n")
 	bufrw.Flush()
 
-	fmt.Printf("[WS] Client Connected: %s (Monitor: %v) | UA: %s\n", remoteAddr, isLocalDashboard, ua)
+	// Send initial slot handshake packet [0xFD, assignedSlot] to phone
+	if !isLocalDashboard {
+		handshakeFrame := []byte{0x82, 0x02, 0xFD, byte(initialSlot)}
+		conn.Write(handshakeFrame)
+	}
+
+	fmt.Printf("[WS] Client Connected: %s (Assigned: P%d, Monitor: %v) | UA: %s\n", remoteAddr, initialSlot, isLocalDashboard, ua)
 
 	reader := bufrw.Reader
 	for {
@@ -208,13 +244,20 @@ func (app *ServerApp) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 				btnMask |= uint32(binary.LittleEndian.Uint16(payload[8:10])) << 16
 			}
 
-			slotNum := 1
+			slotNum := initialSlot
 			if payloadLen >= 11 {
-				slotNum = int(payload[10])
-				if slotNum != 2 {
+				switch int(payload[10]) {
+				case 2:
+					slotNum = 2
+				case 1:
 					slotNum = 1
 				}
 			}
+
+			// Keep client writer slot mapping updated for accurate rumble routing
+			app.wsClientsMu.Lock()
+			app.wsClients[writer] = slotNum
+			app.wsClientsMu.Unlock()
 
 			// Update Telemetry for Dashboard
 			app.mu.Lock()
