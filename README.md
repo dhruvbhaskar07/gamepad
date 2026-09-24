@@ -37,7 +37,9 @@ No mobile app installation required! Simply open your mobile browser, scan the Q
 - 📳 **Real Dual-Motor Game Force Feedback (Rumble)**:
   - Translates in-game heavy and light vibration motor telemetry from games (Steam, Forza, Tekken, etc.) into dual-layer phone vibration: physical haptic actuator pulses and acoustic speaker-coil rumble with on-screen visual shockwaves.
 - 👥 **2-Player Local Co-Op (P1 / P2 Slots)**:
-  - Seamlessly toggle between Player 1 and Player 2 with glowing visual indicators (Cyan `P1` vs Neon Red `P2`). Two phones can connect simultaneously for 2-player co-op gaming.
+  - Seamlessly toggle between Player 1 and Player 2 with glowing visual indicators (Cyan `P1` vs Neon Red `P2`). Two phones can connect simultaneously for 2-player co-op gaming with automatic slot recommendation.
+- 🔄 **Configurable Emulation Engine**:
+  - Switch between virtual **Xbox 360** (universal PC/Steam/Game Pass compatibility) and native **Sony DualShock 4 (DS4)** controller emulation dynamically via the Dashboard or `config.json`.
 - 💾 **Profile & Layout Customization Studio**:
   - Drag, drop, and scale every button and joystick individually.
   - Create, save, export, and import unlimited custom profiles saved directly in browser storage.
@@ -72,11 +74,11 @@ The server will automatically start, detect your local IP address, check for the
 
 ### 2. Connect Your Phone
 1. In the Desktop Dashboard, scan the displayed **QR Code** using your smartphone camera.
-2. *Or* open your mobile browser and navigate to:
-   ```
-   http://<YOUR_PC_IP>:8080
-   ```
-   *(e.g., `http://192.168.29.148:8080`)*
+2. *Or* open your mobile browser and navigate directly:
+   - **Auto-Assign / Default**: `http://<YOUR_PC_IP>:8080` *(automatically assigns first available slot)*
+   - **Player 1 Direct**: `http://<YOUR_PC_IP>:8080/p1`
+   - **Player 2 Direct**: `http://<YOUR_PC_IP>:8080/p2`
+   *(e.g., `http://192.168.29.148:8080/p1`)*
 3. Tap **[⛶ Fullscreen]** in the top bar for an immersive full-screen experience.
 4. Launch any game on PC and start playing!
 
