@@ -47,6 +47,8 @@ No mobile app installation required! Simply open your mobile browser, scan the Q
   - Multi-layer real-time cosmic aurora background mesh, retro cybernetic perspective grid, floating console glyphs, and responsive click shockwaves.
 - 📶 **One-Click Windows Hotspot Automation**:
   - Play on the go without a Wi-Fi router. The built-in hotspot manager automatically enables Windows Mobile Hotspot and connects phones directly to the PC.
+- 📱 **Native Android Companion App**:
+  - Pre-built signed APK with **UDP Auto-Discovery Radar** to automatically find the host PC with zero manual typing, hardware-level haptic rumble, and notch cutout display expansion.
 - 🗗 **Cross-Browser Fullscreen**:
   - Immersive borderless gameplay on Android Chrome, Samsung Internet, and iOS Safari ("Add to Home Screen" PWA mode).
 
@@ -73,6 +75,14 @@ START_DUALSENSE_SERVER.bat
 The server will automatically start, detect your local IP address, check for the ViGEm kernel driver, and open the **Desktop Dashboard**.
 
 ### 2. Connect Your Phone
+
+#### Option A: Android APK (Recommended for Friends)
+1. Install **[DualSenseMobile.apk](DualSenseMobile.apk)** on the phone.
+2. Open the app while connected to the same Wi-Fi (or the PC's Mobile Hotspot).
+3. The app automatically detects your PC server via UDP broadcast radar — tap **[Connect]**!
+4. *(Or enter the PC IP manually / select Player 1 or Player 2).*
+
+#### Option B: Any Web Browser (No Install Needed)
 1. In the Desktop Dashboard, scan the displayed **QR Code** using your smartphone camera.
 2. *Or* open your mobile browser and navigate directly:
    - **Auto-Assign / Default**: `http://<YOUR_PC_IP>:8080` *(automatically assigns first available slot)*
@@ -103,8 +113,10 @@ The server will automatically start, detect your local IP address, check for the
 ```
 d:\vib/
 ├── DualSenseServer.exe            # High-performance compiled Windows server binary
-├── START_DUALSENSE_SERVER.bat     # 1-Click launcher script
-├── build.bat                      # Automated Go build script
+├── DualSenseMobile.apk            # Pre-built signed Android companion APK
+├── START_DUALSENSE_SERVER.bat     # 1-Click server launcher script
+├── build.bat                      # Automated Go server build script
+├── build_apk.bat                  # 1-Click Android APK build script
 ├── ViGEmClient.dll                # Windows Virtual Gamepad Bus DLL
 ├── config.json                    # Persistent server configuration
 ├── go.mod                         # Go module definition
@@ -112,6 +124,12 @@ d:\vib/
 ├── LICENSE                        # MIT License
 ├── .gitignore                     # Git ignore rules
 ├── .gitattributes                 # Line-ending normalizations
+│
+├── android/                       # NATIVE ANDROID COMPANION APP
+│   ├── src/main/AndroidManifest.xml # Permissions, landscape, immersive flags
+│   ├── src/main/java/...          # MainActivity, UDP radar discovery & haptic bridge
+│   ├── src/main/assets/           # Embedded cyber lobby & offline controller bundle
+│   └── build_apk.ps1              # Automated SDK build & signing pipeline
 │
 ├── server/                        # BACKEND SERVICES (Go)
 │   ├── main.go                    # Server lifecycle, flags & clean shutdown
